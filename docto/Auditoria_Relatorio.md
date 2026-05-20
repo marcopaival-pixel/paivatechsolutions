@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Versão do relatório** | 1.2 |
+| **Versão do relatório** | 1.3 |
 | **Data da auditoria** | 20/05/2026 |
 | **Última atualização** | 20/05/2026 |
 | **Escopo** | `c:\Projetos\PaivatechSolutions` (workspace completo) |
@@ -22,6 +22,7 @@
 | 20/05/2026 | 1.0 | Auditoria inicial completa (27 seções) |
 | 20/05/2026 | 1.1 | Implementação P0/P1/P2: rate limit, Next 15.5.18, headers, sitemap, SSG, redirects, hero, Vitest, CI, README |
 | 20/05/2026 | 1.2 | Turnstile CAPTCHA, CSP+HSTS, 12 testes Vitest, `vercel.json`, README monorepo, CI Fabrica; Git pendente (CLI ausente no ambiente) |
+| 20/05/2026 | 1.3 | Lighthouse CI, 18 testes (API route), typecheck, logs redigidos, health estendido, `DEPLOY_VERCEL.md`, `git init` + commit inicial |
 
 ---
 
@@ -544,7 +545,7 @@ npm run start   # ou deploy Vercel
 | R4 | Asset hero ausente | UX/LCP ruim | Certa | ✅ Mitigado — `next/image` + `/branding/logo-icon.svg` |
 | R5 | Sem testes automatizados | Regressões | Média | ✅ Parcial — Vitest 5 testes (query-param, rate-limit) |
 | R6 | Sem security headers | XSS/clickjacking | Média | ✅ Mitigado — `next.config.ts` headers |
-| R7 | Workspace sem Git | Sem CI/rollback | Alta | ⬜ Parcial — `.gitignore` raiz + workflow CI; `git init` pendente |
+| R7 | Workspace sem Git | Sem CI/rollback | Alta | ✅ Parcial — repo local + commit; **push remoto** pendente |
 | R8 | Sitemap incompleto | SEO | Certa | ✅ Mitigado — 7 landings + legado `/produtos/*` |
 | R9 | Copy ConsultaTech/Credit | Legal/reputação | Média | ⬜ Pendente (jurídico) |
 | R10 | `.env.local` no disco | Vazamento se commit | Baixa | ✅ Mitigado — `.gitignore` permite `.env.example` |
@@ -561,7 +562,7 @@ npm run start   # ou deploy Vercel
 | C2 | Atualizar Next.js (ex.: 15.5.18+) | ✅ |
 | C3 | CRM webhook em prod testado | ⬜ |
 | C4 | Hero image ou remover referência | ✅ |
-| C5 | Git + CI (lint, build, audit) | ⬜ Parcial (CI ✅; `git init` + remote pendente) |
+| C5 | Git + CI (lint, build, audit) | ⬜ Parcial (CI ✅; commit local ✅; remote pendente) |
 
 ### Alta
 
@@ -577,8 +578,8 @@ npm run start   # ou deploy Vercel
 
 | ID | Melhoria | Status |
 |----|----------|--------|
-| M1 | Vitest schemas + API | ✅ (12 testes: schema, query-param, rate-limit, turnstile) |
-| M2 | Lighthouse CI | ⬜ |
+| M1 | Vitest schemas + API | ✅ (18 testes incl. `POST /api/contact`) |
+| M2 | Lighthouse CI | ✅ (advisory no CI) |
 | M3 | WhatsApp real no contato | ⬜ Parcial (env `NEXT_PUBLIC_CONTACT_WHATSAPP_*`) |
 | M4 | CI validate Fabrica | ✅ (`.github/workflows/fabrica-validate.yml`) |
 | M5 | Postgres modo B (se exigido LGPD) | ⬜ |
@@ -602,11 +603,11 @@ npm run start   # ou deploy Vercel
 | Performance | 7,5 | 20/05/2026 |
 | Código | 8,0 | 20/05/2026 |
 | UX/UI | 8,5 | 20/05/2026 |
-| Testes | 6,0 | 20/05/2026 |
-| Deploy | 7,5 | 20/05/2026 |
+| Testes | 7,0 | 20/05/2026 |
+| Deploy | 8,0 | 20/05/2026 |
 | Escalabilidade | 7,0 | 20/05/2026 |
 
-**Nota geral ponderada: 7,7 / 10** (após implementação v1.2)
+**Nota geral ponderada: 8,0 / 10** (após implementação v1.3)
 
 > Recalcular notas após conclusão dos itens P0 do plano de ação.
 
@@ -624,7 +625,9 @@ npm run start   # ou deploy Vercel
 | Hero image | ✅ | 20/05/2026 |
 | Sitemap completo | ✅ | 20/05/2026 |
 | Testes mínimos API | ✅ Parcial (Vitest unitário) | 20/05/2026 |
-| Git + CI | ⬜ Parcial (workflow `.github/workflows/nexshape-site-ci.yml`) | |
+| Git + CI | ✅ Parcial (commit local; push remoto pendente) | 20/05/2026 |
+| Guia deploy Vercel | ✅ | 20/05/2026 |
+| Lighthouse CI | ✅ advisory | 20/05/2026 |
 | Revisão jurídica legais + Credit | ⬜ | |
 | Monitoramento uptime | ⬜ | |
 | Domínio + SSL | ⬜ | |
@@ -641,7 +644,7 @@ npm run start   # ou deploy Vercel
 | P0 | C1 | Rate limit | Upstash + fallback memória | Alto | Médio | ✅ | 20/05/2026 |
 | P0 | C2 | Patch Next | `15.5.18` | Alto | Baixo–Médio | ✅ | 20/05/2026 |
 | P0 | C3 | CRM prod | `webhook` + URL + teste | Alto | Baixo | ⬜ | |
-| P0 | C5 | Git + CI | lint, build, audit no PR | Alto | Médio | ⬜ Parcial | 20/05/2026 |
+| P0 | C5 | Git + CI | lint, build, audit no PR | Alto | Médio | ⬜ Parcial (push remoto) | 20/05/2026 |
 | P1 | A1 | Security headers | X-Frame, nosniff, Referrer-Policy | Alto | Baixo | ✅ | 20/05/2026 |
 | P1 | A2 | Sitemap + hero | SEO/UX | Médio | Baixo | ✅ | 20/05/2026 |
 | P1 | A5 | CAPTCHA | Turnstile opcional | Alto | Médio | ✅ | 20/05/2026 |
@@ -649,7 +652,7 @@ npm run start   # ou deploy Vercel
 | P2 | M1 | Vitest | schema + query-param + rate-limit + turnstile | Médio | Médio | ✅ | 20/05/2026 |
 | P2 | A3 | SSG/query-param | 7 produtos | Baixo | Baixo | ✅ | 20/05/2026 |
 | P2 | M5 | Postgres B | LGPD/retry | Médio | Alto | ⬜ | |
-| P3 | M2 | Lighthouse CI | Performance | Baixo | Médio | ⬜ | |
+| P3 | M2 | Lighthouse CI | Performance advisory | Baixo | Médio | ✅ | 20/05/2026 |
 | P3 | B1 | URLs unificadas | Redirects 301 em `next.config.ts` | Baixo | Médio | ✅ | 20/05/2026 |
 
 ---
@@ -658,7 +661,7 @@ npm run start   # ou deploy Vercel
 
 O workspace **PaivaTech Solutions** concentra-se no site institucional **nexshape-site** (Next.js) para a Suite NexShape, com captura de leads via API e integração CRM por webhook. **Fabrica** é infraestrutura de especificação por agentes. Os **produtos SaaS** da suite **não estão implementados** neste repositório.
 
-**Readiness para produção (v1.2):** MVP reforçado com Turnstile (opcional), CSP, 12 testes e CI Fabrica. **Go-live condicional:** CRM webhook, Upstash, chaves Turnstile em prod, `git init` + push (ver `docto/GIT_SETUP.md`), deploy Vercel e revisão jurídica.
+**Readiness para produção (v1.3):** Código e pipeline prontos; **18 testes**, Lighthouse CI advisory, guia `DEPLOY_VERCEL.md`, repositório Git com commit inicial. **Go-live:** push para GitHub, variáveis Vercel (CRM, Upstash, Turnstile), domínio e revisão jurídica.
 
 ---
 

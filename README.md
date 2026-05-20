@@ -17,7 +17,9 @@ npm run dev
 
 ## Auditoria e readiness
 
-Relatório vivo: [docto/Auditoria_Relatorio.md](docto/Auditoria_Relatorio.md)
+- Relatório vivo: [docto/Auditoria_Relatorio.md](docto/Auditoria_Relatorio.md)
+- Deploy Vercel: [docto/DEPLOY_VERCEL.md](docto/DEPLOY_VERCEL.md)
+- Git: [docto/GIT_SETUP.md](docto/GIT_SETUP.md)
 
 ## CI
 

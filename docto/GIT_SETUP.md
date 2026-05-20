@@ -1,11 +1,6 @@
-# Configurar Git (quando `git` estiver instalado no PATH)
+# Git — repositório local
 
-```powershell
-cd c:\Projetos\PaivatechSolutions
-git init
-git add .
-git commit -m "feat: site NexShape com auditoria, segurança e CI"
-```
+O repositório já foi inicializado com commit inicial. Para conectar ao remoto:
 
 Conectar ao GitHub:
 

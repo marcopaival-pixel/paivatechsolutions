@@ -49,12 +49,12 @@ export default function HomePage() {
           <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-slate-900/50 backdrop-blur-3xl shadow-[0_0_100px_rgba(79,70,229,0.15)] transform [rotateX(2deg)] transition-transform hover:[rotateX(0deg)] duration-1000 ease-out">
             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 via-transparent to-transparent opacity-50"></div>
             <Image
-              src="/branding/logo-icon.svg"
-              alt="Ecossistema NexShape — PaivaTech Solutions"
-              width={640}
-              height={640}
+              src="/hero-dashboard.png"
+              alt="NexShape — visão do ecossistema de gestão"
+              width={1200}
+              height={675}
               priority
-              className="w-full max-w-md mx-auto h-auto opacity-90 py-16 px-12"
+              className="w-full h-auto opacity-90 scale-[1.01]"
             />
           </div>
           
