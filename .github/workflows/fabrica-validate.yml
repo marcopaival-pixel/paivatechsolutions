@@ -1,0 +1,27 @@
+name: Fabrica validate
+
+on:
+  push:
+    paths:
+      - "Fabrica/**"
+      - ".github/workflows/fabrica-validate.yml"
+  pull_request:
+    paths:
+      - "Fabrica/**"
+
+defaults:
+  run:
+    working-directory: Fabrica
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: Fabrica/package-lock.json
+      - run: npm ci
+      - run: npm run validate

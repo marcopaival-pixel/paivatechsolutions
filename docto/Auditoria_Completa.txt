@@ -1,0 +1,430 @@
+Realize uma auditoria técnica, funcional, arquitetural e operacional completa deste sistema, independentemente da tecnologia utilizada (Laravel, PHP, Node.js, Python, Java, .NET, React, Vue, Angular, mobile ou desktop).
+
+# Objetivo
+
+Gerar um diagnóstico 360° do sistema, avaliando:
+
+- Arquitetura e organização do projeto.
+- Funcionalidades implementadas.
+- Fluxos de negócio.
+- Segurança.
+- Performance.
+- Banco de dados.
+- Integrações externas.
+- Pagamentos.
+- APIs.
+- Rotas.
+- Permissões.
+- Qualidade de código.
+- Testes.
+- Deploy.
+- Infraestrutura.
+- Monitoramento.
+- Documentação.
+- Prontidão para produção.
+
+O relatório deve ser extremamente detalhado, com checklist, riscos, melhorias e plano de ação priorizado.
+
+---
+
+# 1. Visão Geral do Sistema
+
+Identifique e documente:
+
+- Nome do sistema.
+- Objetivo do negócio.
+- Público-alvo.
+- Tecnologias utilizadas.
+- Frameworks e bibliotecas.
+- Estrutura de pastas.
+- Dependências principais.
+- Versões de runtime.
+- Serviços externos utilizados.
+
+---
+
+# 2. Inventário de Funcionalidades
+
+Mapeie todas as funcionalidades e organize por módulos.
+
+Exemplos:
+- Autenticação.
+- Cadastro de usuários.
+- Permissões.
+- Dashboard.
+- Produtos.
+- Clientes.
+- Vendas.
+- Estoque.
+- Financeiro.
+- Relatórios.
+- API.
+- Integrações.
+- Configurações.
+
+Para cada funcionalidade, informe:
+- Objetivo.
+- Rotas.
+- Controllers.
+- Services.
+- Models.
+- Views.
+- Tabelas.
+- Status (completo, parcial, pendente).
+- Riscos.
+- Melhorias.
+
+---
+
+# 3. Auditoria de Rotas
+
+Analise todas as rotas e verifique:
+
+- URL.
+- Método HTTP.
+- Controller/Action.
+- Middleware.
+- Permissões.
+- Exposição pública.
+- Riscos.
+- Observações.
+
+Identifique:
+- Rotas sem autenticação.
+- Rotas sem autorização.
+- Rotas duplicadas.
+- Rotas obsoletas.
+- Rotas de debug expostas.
+- Rotas administrativas sem proteção.
+
+---
+
+# 4. Auditoria de Banco de Dados
+
+Analise:
+
+- Tabelas.
+- Relacionamentos.
+- Chaves estrangeiras.
+- Índices.
+- Constraints.
+- Soft deletes.
+- Auditoria.
+- Seeds.
+- Migrations.
+
+Verifique:
+- Tabelas não utilizadas.
+- Campos redundantes.
+- Ausência de índices.
+- Falta de foreign keys.
+- Dados inconsistentes.
+- Estrutura multi-tenant.
+
+---
+
+# 5. Auditoria de Segurança
+
+Verifique:
+
+- Autenticação.
+- Autorização.
+- CSRF.
+- XSS.
+- SQL Injection.
+- Rate limiting.
+- Headers de segurança.
+- Criptografia.
+- Gestão de segredos.
+- Logs sensíveis.
+- Upload de arquivos.
+- LGPD.
+
+---
+
+# 6. Auditoria de Permissões
+
+Mapeie:
+- Perfis.
+- Roles.
+- Permissions.
+- Módulos acessíveis.
+- Possíveis escalonamentos de privilégio.
+
+---
+
+# 7. Auditoria de APIs
+
+Para cada API:
+- Endpoint.
+- Método.
+- Autenticação.
+- Payload.
+- Respostas.
+- Versionamento.
+- Rate limit.
+- Documentação.
+
+---
+
+# 8. Integrações Externas
+
+Liste todas as integrações.
+
+Exemplos:
+- Gateways de pagamento.
+- WhatsApp.
+- E-mail.
+- SMS.
+- ERP.
+- Bancos.
+- APIs fiscais.
+
+Para cada integração:
+- Serviço.
+- Finalidade.
+- URLs.
+- Credenciais necessárias.
+- Custos (gratuito ou pago).
+- Etapas de configuração.
+- Webhooks.
+- Riscos.
+- Alternativas.
+
+---
+
+# 9. Processamento de Pagamentos
+
+Se houver pagamentos, analisar:
+
+- Gateways integrados.
+- Fluxo de checkout.
+- Assinaturas.
+- Webhooks.
+- Conciliação.
+- Reembolsos.
+- Tratamento de falhas.
+- PCI DSS.
+
+Exemplos:
+- :contentReference[oaicite:0]{index=0}
+- :contentReference[oaicite:1]{index=1}
+- :contentReference[oaicite:2]{index=2}
+- :contentReference[oaicite:3]{index=3}
+
+---
+
+# 10. Auditoria de Performance
+
+Avalie:
+- Queries lentas.
+- N+1.
+- Cache.
+- Filas.
+- Assets.
+- Lazy loading.
+- Paginação.
+
+---
+
+# 11. Auditoria de Código
+
+Avalie:
+- Organização.
+- Padrões.
+- SOLID.
+- DRY.
+- Complexidade.
+- Código duplicado.
+- Comentários.
+- Dead code.
+
+---
+
+# 12. Auditoria de Testes
+
+Verifique:
+- Testes unitários.
+- Integração.
+- Cobertura.
+- Testes E2E.
+
+---
+
+# 13. Auditoria de Frontend
+
+Analise:
+- Responsividade.
+- UX/UI.
+- Acessibilidade.
+- Performance.
+- SEO.
+
+---
+
+# 14. Auditoria de Deploy
+
+Documente:
+
+- Dependências do servidor.
+- Variáveis de ambiente.
+- Banco de dados.
+- Redis.
+- Filas.
+- Cron jobs.
+- Storage.
+- SSL.
+- DNS.
+- Backups.
+- Monitoramento.
+
+---
+
+# 15. O que deve ser enviado para Produção
+
+Liste exatamente:
+- Pastas e arquivos necessários.
+- Pastas que NÃO devem ser enviadas.
+- Permissões.
+- Build steps.
+
+---
+
+# 16. Checklist de Configuração do Servidor
+
+Exemplo:
+- PHP e extensões.
+- Composer.
+- Node.js.
+- PostgreSQL/MySQL.
+- Redis.
+- Supervisor.
+- Nginx ou Apache.
+- Certificado SSL.
+
+---
+
+# 17. Passo a Passo de Deploy
+
+Documente o processo completo:
+1. Provisionar servidor.
+2. Configurar domínio.
+3. Clonar projeto.
+4. Instalar dependências.
+5. Configurar `.env`.
+6. Gerar chaves.
+7. Executar migrations.
+8. Build frontend.
+9. Ajustar permissões.
+10. Configurar filas e cron.
+11. Validar aplicação.
+
+---
+
+# 18. Variáveis de Ambiente
+
+Liste todas as variáveis obrigatórias:
+- APP_URL
+- DB_*
+- REDIS_*
+- MAIL_*
+- QUEUE_*
+- PAYMENT_*
+- STORAGE_*
+- THIRD_PARTY_*
+
+---
+
+# 19. Backup e Recuperação
+
+Defina:
+- Estratégia de backup.
+- Retenção.
+- Restore.
+- Testes periódicos.
+
+---
+
+# 20. Monitoramento e Logs
+
+Sugira:
+- :contentReference[oaicite:4]{index=4}
+- :contentReference[oaicite:5]{index=5}
+- :contentReference[oaicite:6]{index=6}
+- :contentReference[oaicite:7]{index=7}
+
+---
+
+# 21. Conformidade e LGPD
+
+Verifique:
+- Política de privacidade.
+- Consentimento.
+- Exclusão de dados.
+- Criptografia.
+
+---
+
+# 22. Documentação
+
+Verifique:
+- README.
+- API docs.
+- Manual de instalação.
+- Manual do usuário.
+
+---
+
+# 23. Riscos Críticos
+
+Liste vulnerabilidades e impactos.
+
+---
+
+# 24. Melhorias Recomendadas
+
+Classifique por prioridade:
+- Crítica.
+- Alta.
+- Média.
+- Baixa.
+
+---
+
+# 25. Nota Geral do Sistema
+
+Atribua notas de 0 a 10 para:
+- Arquitetura.
+- Segurança.
+- Performance.
+- Código.
+- UX/UI.
+- Testes.
+- Deploy.
+- Escalabilidade.
+
+---
+
+# 26. Checklist Go-Live
+
+Gerar checklist final com:
+- Itens concluídos.
+- Pendências.
+- Bloqueadores.
+
+---
+
+# 27. Plano de Ação Prioritizado
+
+Tabela com:
+- Prioridade.
+- Item.
+- Descrição.
+- Impacto.
+- Esforço.
+
+---
+
+# Objetivo Final
+
+Entregar um relatório completo de auditoria e readiness para produção, com todas as correções, recomendações e instruções necessárias para colocar o sistema em produção com segurança, escalabilidade e qualidade profissional.

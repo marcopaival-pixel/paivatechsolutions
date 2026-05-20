@@ -1,0 +1,54 @@
+name: nexshape-site CI
+
+on:
+  push:
+    paths:
+      - "apps/nexshape-site/**"
+      - ".github/workflows/nexshape-site-ci.yml"
+  pull_request:
+    paths:
+      - "apps/nexshape-site/**"
+      - ".github/workflows/nexshape-site-ci.yml"
+
+defaults:
+  run:
+    working-directory: apps/nexshape-site
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/nexshape-site/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://www.example.com
+
+      - name: Lighthouse CI (advisory)
+        run: npm run lighthouse
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_SITE_URL: https://www.example.com
+
+      - name: Audit (advisory)
+        run: npm audit --audit-level=high
+        continue-on-error: true
