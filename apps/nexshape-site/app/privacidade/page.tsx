@@ -4,7 +4,7 @@ import { PRIVACY_POLICY_VERSION } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Política de Privacidade · PaivaTech Solutions",
-  description: "Entenda como protegemos e tratamos seus dados pessoais no ecossistema NexShape.",
+  description: "Entenda como protegemos e tratamos seus dados pessoais no ecossistema PaivaTech.",
 };
 
 export default function PrivacidadePage() {
@@ -25,7 +25,8 @@ export default function PrivacidadePage() {
             Compromisso com <br/> <span className="text-white">Seus Dados</span>
           </h1>
           <p className="text-lg text-slate-400 leading-relaxed max-w-2xl">
-            Sua privacidade é nossa prioridade técnica. Entenda como tratamos suas informações com transparência e segurança absoluta.
+            Sua privacidade é prioridade técnica. Entenda como tratamos suas informações com transparência, segurança e
+            conformidade com a LGPD.
           </p>
           <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Versão {PRIVACY_POLICY_VERSION} · Em conformidade com a LGPD</p>
         </header>
@@ -37,7 +38,7 @@ export default function PrivacidadePage() {
               Controlador de Dados
             </h2>
             <p className="text-slate-400 leading-relaxed">
-              Esta política aplica-se ao portal institucional da PaivaTech Solutions e às interações de contato da suite NexShape. Atuamos como controladores das informações que você compartilha voluntariamente conosco para fins de suporte e consultoria comercial.
+              Esta política aplica-se ao portal institucional da PaivaTech Solutions e às interações de contato da PaivaTech. Atuamos como controladores das informações que você compartilha voluntariamente conosco para fins de suporte e consultoria comercial.
             </p>
           </section>
 
@@ -47,7 +48,9 @@ export default function PrivacidadePage() {
               Dados Coletados
             </h2>
             <p className="text-slate-400 leading-relaxed">
-              Coletamos apenas o essencial para um atendimento de elite: seu nome, e-mail profissional, telefone corporativo e empresa. Essas informações são utilizadas exclusivamente para qualificar sua demanda e oferecer a solução tecnológica ideal para seu cenário.
+              Coletamos apenas o essencial para o atendimento: nome, e-mail profissional, telefone corporativo, empresa
+              e sistema de interesse. Essas informações são utilizadas exclusivamente para qualificar sua demanda e
+              oferecer a solução adequada ao seu cenário.
             </p>
           </section>
 

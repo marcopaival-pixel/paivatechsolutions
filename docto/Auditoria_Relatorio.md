@@ -2,16 +2,17 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Versão do relatório** | 1.3 |
-| **Data da auditoria** | 20/05/2026 |
-| **Última atualização** | 20/05/2026 |
+| **Versão do relatório** | 2.2 |
+| **Data da auditoria** | 21/05/2026 |
+| **Última atualização** | 21/05/2026 (Fase 1–2 do plano: `/acessar`, Turnstile, secrets, rate limit admin, testes 51) |
 | **Escopo** | `c:\Projetos\PaivatechSolutions` (workspace completo) |
 | **Aplicação em produção** | `apps/nexshape-site` |
 | **Ferramenta de especificação** | `Fabrica/` |
 | **Template de referência** | `docto/Auditoria_Completa.txt` |
 | **Auditor** | Cursor Agent (auditoria automatizada + revisão de código) |
+| **Testes na auditoria** | 11 arquivos Vitest, **39 casos** — todos passando |
 
-> **Documento vivo:** este arquivo deve ser atualizado sempre que um item do plano de ação for concluído, um risco for mitigado ou o escopo do sistema mudar. Registrar mudanças na seção [Histórico de atualizações](#histórico-de-atualizações).
+> **Documento vivo:** atualize este arquivo quando um item do plano for concluído, um risco for mitigado ou o escopo mudar. Registrar em [Histórico de atualizações](#histórico-de-atualizações).
 
 ---
 
@@ -19,10 +20,11 @@
 
 | Data | Versão | Alteração |
 |------|--------|-----------|
-| 20/05/2026 | 1.0 | Auditoria inicial completa (27 seções) |
-| 20/05/2026 | 1.1 | Implementação P0/P1/P2: rate limit, Next 15.5.18, headers, sitemap, SSG, redirects, hero, Vitest, CI, README |
-| 20/05/2026 | 1.2 | Turnstile CAPTCHA, CSP+HSTS, 12 testes Vitest, `vercel.json`, README monorepo, CI Fabrica; Git pendente (CLI ausente no ambiente) |
-| 20/05/2026 | 1.3 | Lighthouse CI, 18 testes (API route), typecheck, logs redigidos, health estendido, `DEPLOY_VERCEL.md`, `git init` + commit inicial |
+| 20/05/2026 | 1.0–1.5 | Auditoria inicial, mitigações P0/P1, landings, CI, Turnstile (ver commits anteriores) |
+| 21/05/2026 | **2.0** | Reauditoria 360°: **painel admin**, `middleware.ts`, persistência `lib/db` (JSON + Upstash), APIs admin, WhatsApp configurável, redirects `/acessar`, 39 testes; notas e plano de ação recalculados |
+| 21/05/2026 | **2.1** | Implementação plano: 7 rotas `/acessar`, `db.json` gitignore, Turnstile alinhado, `SESSION_SECRET` obrigatório prod, timing-safe, rate limit admin API, middleware explícito, 51 testes |
+| 21/05/2026 | **2.2** | Fase 3: CSRF admin, CRM allowlist, Playwright E2E, CSP prod, 62 testes Vitest |
+| 21/05/2026 | **2.2** | **GO_LIVE_FASE0.md** + `scripts/smoke-prod.ps1` — runbook operacional Fase 0 |
 
 ---
 
@@ -55,6 +57,7 @@
 25. [Nota Geral do Sistema](#25-nota-geral-do-sistema)
 26. [Checklist Go-Live](#26-checklist-go-live)
 27. [Plano de Ação Prioritizado](#27-plano-de-ação-prioritizado)
+28. [Próximos passos (go-live)](#28-próximos-passos-go-live)
 
 ---
 
@@ -62,167 +65,170 @@
 
 | Item | Detalhe |
 |------|---------|
-| **Nome** | PaivaTech Solutions — Site institucional / marketing da **Suite NexShape** |
-| **Objetivo de negócio** | Apresentar o ecossistema de produtos (Saúde, Odontologia, Chat/IA, Crédito, Kanban, Commerce, Marketing) e capturar **leads** via formulário de contato |
-| **Público-alvo** | Empresas B2B (academias, clínicas, varejo, fintechs) interessadas na suite |
-| **Tecnologias** | Next.js 15.1.11, React 19, TypeScript 5, Tailwind CSS 3.4, Zod 4, React Hook Form |
-| **Runtime** | Node.js v24.14.1 (ambiente local auditado), npm 11.11.0 |
-| **Hospedagem prevista** | Vercel (recomendado no runbook Fabrica) |
-| **Banco de dados** | **Não implementado** no código atual (PostgreSQL opcional apenas na especificação) |
-| **Autenticação** | **Ausente** (site 100% público) |
-| **Pagamentos** | **Ausente** (mencionado apenas em copy de marketing) |
-| **Git no workspace** | **Não** (raiz não é repositório Git no momento da auditoria) |
+| **Nome** | PaivaTech Solutions — site institucional / marketing do **ecossistema PaivaTech** |
+| **Objetivo de negócio** | Apresentar 7 produtos, capturar **leads**, configurar links de acesso aos apps e direcionar para CRM |
+| **Público-alvo** | Empresas B2B (academias, clínicas, varejo, fintechs, operações comerciais) |
+| **Tecnologias** | Next.js **15.5.18**, React 19, TypeScript 5, Tailwind 3.4, Zod 4, React Hook Form |
+| **Runtime** | Node.js 22 (CI GitHub Actions); compatível com 20+ local |
+| **Hospedagem prevista** | Vercel (`vercel.json`, região `gru1`) |
+| **Persistência** | JSON local (`db.json`) + **Upstash Redis** (produção recomendada) |
+| **Autenticação** | Painel admin: cookie HMAC `paivatech_admin_session` (24h) |
+| **Pagamentos** | **Ausente** no código (apenas copy de marketing) |
+| **Git** | Repositório ativo no monorepo; push remoto pode estar pendente |
 
 ### Estrutura do workspace
 
 ```
 PaivatechSolutions/
-├── apps/
-│   └── nexshape-site/     ← Aplicação web (único app deployável)
-├── Fabrica/               ← Meta-framework de specs + validação JSON Schema
-└── docto/                 ← Documentação (templates, briefings, este relatório)
+├── apps/nexshape-site/     ← Aplicação web (único app deployável)
+├── Fabrica/                ← Meta-framework de specs + validação JSON Schema
+├── docto/                  ← Documentação, deploy, este relatório
+└── .github/workflows/      ← CI nexshape-site
 ```
 
 ### Dependências principais (`nexshape-site`)
 
-- `next@15.1.11`, `react@^19`, `zod@^4.4.3`, `react-hook-form`, `@hookform/resolvers`
-- Dev: ESLint 9, `eslint-config-next`, Tailwind 3.4
+| Pacote | Uso |
+|--------|-----|
+| `next@15.5.18` | App Router, API routes, SSR |
+| `zod`, `react-hook-form` | Validação formulário/API |
+| `@upstash/ratelimit`, `@upstash/redis` | Rate limit + storage distribuído |
+| `@marsidev/react-turnstile` | CAPTCHA opcional |
+| `vitest` | Testes unitários (39 casos) |
 
 ### Serviços externos
 
 | Serviço | Status | Uso |
 |---------|--------|-----|
-| CRM Webhook | Configurável | `LEAD_DISPATCH_MODE=webhook` + `CRM_WEBHOOK_URL` |
-| Google Fonts (Geist) | Ativo | `next/font/google` |
-| Portal PaivaTech | Hardcoded | Backlink `https://paivatechsolutions.com.br` |
-| E-mail transacional | Não implementado | Previsto na spec Fabrica |
-| Stripe / gateways | Não implementado | Apenas texto em landing |
-| PostgreSQL | Não implementado | Spec em `Fabrica/outputs/.../05-database-design.json` |
+| Upstash Redis | Opcional (**crítico em prod**) | Leads, produtos, settings, rate limit |
+| Cloudflare Turnstile | Opcional | Anti-bot em `/api/contact` |
+| CRM Webhook | Configurável | `LEAD_DISPATCH_MODE=webhook` |
+| WhatsApp | Links `wa.me` | Configurável no admin `/admin/contato` |
+| Google Fonts | Ativo | `next/font/google` |
+| Vercel | Target deploy | Hosting + SSL |
+| PostgreSQL / Stripe / e-mail server | **Não implementados** | Spec `Fabrica/` apenas |
 
-### Produtos NexShape (fora deste repositório)
+### Produtos SaaS (fora deste repositório)
 
-Os sistemas operacionais (Fitness, OralByte, Zyncora, ConsultaTech, KanbaPaiva, Commerce, PaivaGrowth) existem como **landings + especificações**; o código SaaS completo **não está neste workspace**.
+Fitness, OralByte, Zyncora, ConsultaTech, KanbaPaiva, Commerce e PaivaGrowth existem como **landings + links configuráveis**; o código operacional dos apps **não está neste workspace**.
 
 ---
 
 ## 2. Inventário de Funcionalidades
 
-### Módulo: Site institucional (páginas estáticas/SSR)
+### Módulo: Site institucional
 
-| Funcionalidade | Rotas | Arquivos | Status | Riscos | Melhorias |
-|----------------|-------|----------|--------|--------|-----------|
-| Home | `/` | `app/page.tsx` | Parcial | Imagem `/hero-dashboard.png` **ausente** em `public/` | Adicionar asset ou remover referência |
-| Sobre | `/sobre` | `app/sobre/page.tsx` | Completo | — | — |
-| Contato | `/contato` | `app/contato/page.tsx` | Completo | WhatsApp placeholder `+55 (00) 00000-0000` | Dados reais |
-| Sucesso contato | `/contato/enviado` | `app/contato/enviado/page.tsx` | Completo | — | — |
-| Privacidade | `/privacidade` | `app/privacidade/page.tsx` | Completo | Revisão jurídica pendente (spec) | Versão legal sincronizada com `PRIVACY_POLICY_VERSION` |
-| Termos | `/termos` | `app/termos/page.tsx` | Completo | Idem | Idem |
-| Produto genérico | `/produtos/[slug]` | `app/produtos/[slug]/page.tsx` | Parcial | SSG só 4/7 slugs | Alinhar `generateStaticParams` com 7 produtos |
-| Landings dedicadas | `/nexshape-fitness`, `/oralbyte`, `/zyncora`, `/consultatech`, `/kanban`, `/paivatech-commerce`, `/paivagrowth` | `app/*/page.tsx` | Completo | **Fora do sitemap** | Incluir no `sitemap.ts` |
-| 404 | — | `app/not-found.tsx` | Completo | — | — |
-| Erros | — | `app/error.tsx`, `app/global-error.tsx` | Completo | — | — |
+| Funcionalidade | Rotas | Arquivos | Persistência | Status | Riscos |
+|----------------|-------|----------|--------------|--------|--------|
+| Home | `/` | `app/page.tsx` | — | Completo | — |
+| Sobre | `/sobre` | `app/sobre/page.tsx` | — | Completo | — |
+| Contato | `/contato` | `ContactForm.tsx` | Lead via API | Completo | Spam sem Turnstile+Redis |
+| Sucesso | `/contato/enviado` | `app/contato/enviado/page.tsx` | — | Completo | — |
+| Privacidade / Termos | `/privacidade`, `/termos` | + `lib/legal.ts` | — | Completo | Revisão jurídica |
+| 7 landings | `/nexshape-fitness` … `/paivagrowth` | `app/*/page.tsx` | Textos via DB merge | Completo | Copy financeira |
+| Produto legado | `/produtos/[slug]` | `app/produtos/[slug]/page.tsx` | DB | Completo | 301 → landing |
+| SEO | `/sitemap.xml`, `/robots.txt` | `sitemap.ts`, `robots.ts` | — | Completo | URLs legado no sitemap |
+| Acesso ao sistema | `/{landing}/acessar` | Só `nexshape-fitness/acessar` | Admin hosts | **Parcial** | 6 produtos sem handler |
 
-### Módulo: API
+### Módulo: API pública
 
-| Funcionalidade | Rota | Arquivo | Tabelas | Status | Riscos |
-|----------------|------|---------|---------|--------|--------|
-| Formulário de lead | `POST /api/contact` | `app/api/contact/route.ts` | Nenhuma | Completo (MVP) | Sem rate limit; spam/DoS |
-| Health check | `GET /api/health` | `app/api/health/route.ts` | Nenhuma | Completo | Exposto publicamente (aceitável) |
+| Funcionalidade | Rota | Arquivos | Status | Riscos |
+|----------------|------|----------|--------|--------|
+| Captura de lead | `POST /api/contact` | `route.ts`, `dispatch.ts`, `saveLead` | Completo | Rate limit fraco sem Upstash |
+| Health | `GET /api/health` | `route.ts` | Completo | Expõe modo storage |
 
-**Services:** `lib/contact/dispatch.ts`, `lib/contact/schema.ts`, `lib/contact/form-schema.ts`  
-**Models:** Nenhum (sem ORM)  
-**Views:** Componentes React em `components/`
+### Módulo: Painel admin
 
-### Módulo: SEO
+| Funcionalidade | UI | API | Status | Riscos |
+|----------------|-----|-----|--------|--------|
+| Login / logout | `/admin/login` | `POST login`, `POST logout` | Completo | Senha única; sem MFA |
+| Leads (CRM interno) | `/admin` | `GET/PUT/DELETE /admin/api/leads` | Completo | PII; sem audit log |
+| Produtos (textos + URLs) | `/admin/produtos` | `GET/PUT /admin/api/products` | Completo | Sessão vazada = alto impacto |
+| WhatsApp site | `/admin/contato` | `GET/PUT /admin/api/contact` | Completo | — |
+| Export CSV | Dashboard | — | Completo | Download PII |
 
-| Funcionalidade | Arquivo | Status | Risco |
-|----------------|---------|--------|-------|
-| Sitemap | `app/sitemap.ts` | Parcial | 7 landings principais omitidas |
-| Robots | `app/robots.ts` | Completo | — |
+### Módulo: Fabrica
 
-### Módulo: Fabrica (meta-tooling)
+Meta-tooling (Builder/Audit/Evolution), validação AJV — **não deployável** como produto.
 
-| Funcionalidade | Status | Observação |
-|----------------|--------|------------|
-| System Builder (SBO) | Spec completa (piloto) | 17 artefatos JSON/YAML |
-| System Audit Factory (SAF) | Smoke tests | Sem app alvo neste repo |
-| Auto Evolution Factory (AEF) | Smoke tests | Evolui repos externos |
-| Validação de schemas | `npm run validate` | AJV 8 — funcional |
-| CI GitHub Actions | **Pendente** | Referenciado no README, pasta `.github` ausente |
+### Não presentes neste repositório
 
-### Funcionalidades **não presentes** neste repositório
-
-Autenticação, dashboard, vendas, estoque, financeiro, relatórios internos, multi-tenant, assinaturas, webhooks de pagamento, ERP, WhatsApp API, SMS, APIs fiscais.
+Auth de usuários finais, RBAC, multi-tenant, vendas, estoque, financeiro, gateways de pagamento, ERP, SMS, APIs fiscais, filas de retry persistentes.
 
 ---
 
 ## 3. Auditoria de Rotas
 
-### Rotas de página (App Router)
+### Páginas públicas (GET)
 
-| URL | Método | Handler | Middleware | Auth | Permissão | Exposição | Risco |
-|-----|--------|---------|------------|------|-----------|-----------|-------|
-| `/` | GET | `app/page.tsx` | Nenhum | Não | Pública | Pública | Imagem quebrada |
-| `/sobre` | GET | `app/sobre/page.tsx` | Nenhum | Não | Pública | Pública | Baixo |
-| `/contato` | GET | `app/contato/page.tsx` | Nenhum | Não | Pública | Pública | Baixo |
-| `/contato/enviado` | GET | `app/contato/enviado/page.tsx` | Nenhum | Não | Pública | Pública | Baixo |
-| `/privacidade`, `/termos` | GET | respectivos | Nenhum | Não | Pública | Pública | Baixo |
-| `/produtos/{slug}` | GET | `app/produtos/[slug]/page.tsx` | Nenhum | Não | Pública | Pública | SSG incompleto |
-| `/nexshape-fitness` … `/paivagrowth` | GET | landings | Nenhum | Não | Pública | Pública | SEO: fora do sitemap |
-| `/sitemap.xml` | GET | `app/sitemap.ts` | Nenhum | Não | Pública | Pública | Baixo |
-| `/robots.txt` | GET | `app/robots.ts` | Nenhum | Não | Pública | Pública | Baixo |
+| URL | Handler | Middleware | Auth |
+|-----|---------|------------|------|
+| `/`, `/sobre`, `/contato`, `/contato/enviado`, `/privacidade`, `/termos` | `app/**/page.tsx` | `x-pathname` | Não |
+| 7 landings + `/produtos/[slug]` | landings / `[slug]` | Idem | Não |
+| `/sitemap.xml`, `/robots.txt` | metadata routes | Idem | Não |
 
-### Rotas de API
+### Admin (GET)
 
-| URL | Método | Handler | Middleware | Auth | Risco | Observação |
-|-----|--------|---------|------------|------|-------|------------|
-| `/api/contact` | POST | `app/api/contact/route.ts` | Nenhum | Não (público por design) | **Alto** sem rate limit | Honeypot + Zod + limite 15KB OK |
-| `/api/health` | GET | `app/api/health/route.ts` | Nenhum | Não | Baixo | Retorna `{ status: "ok" }` |
+| URL | Auth | Observação |
+|-----|------|------------|
+| `/admin/login` | Não | Bypass middleware |
+| `/admin`, `/admin/produtos`, `/admin/contato` | Cookie session | Redirect se inválido |
 
-### Achados de rotas
+### APIs e route handlers
+
+| URL | Método | Auth | Middleware | Risco |
+|-----|--------|------|------------|-------|
+| `/api/contact` | POST | Não | **Excluído** do matcher | Médio |
+| `/api/health` | GET | Não | Excluído | Baixo |
+| `/admin/api/login` | POST | Não | Bypass | Rate limit 5/min |
+| `/admin/api/logout` | POST | Sim | Protegido | Baixo |
+| `/admin/api/leads` | GET/PUT/DELETE | Sim | 401 JSON | Alto se sessão roubada |
+| `/admin/api/products` | GET/PUT | Sim | Idem | Médio |
+| `/admin/api/contact` | GET/PUT | Sim | Idem | Baixo |
+| `/nexshape-fitness/acessar` | GET | Não | Redirect 302 allowlist | Baixo |
+
+### Achados
 
 | Tipo | Achado |
 |------|--------|
-| Sem autenticação | Todas (esperado para marketing) |
-| Sem autorização | Todas |
-| Duplicadas | `/produtos/fitness` vs `/nexshape-fitness` (intencional, dupla URL) |
-| Obsoletas | Nenhuma detectada |
-| Debug expostas | Nenhuma (`/_next` é build interno) |
-| Admin sem proteção | Não há painel admin |
-
-**Não existe `middleware.ts`** no projeto.
+| Admin protegido | Sim — `middleware.ts` + cookie HMAC |
+| Duplicadas | `/produtos/{slug}` vs landing (301 intencional) |
+| Debug expostas | Nenhuma |
+| **Gap** | `getProductAccessRedirectPath()` prevê `/oralbyte/acessar` etc., mas só existe `nexshape-fitness/acessar` |
+| Bypass frágil | `pathname.includes(".")` pula auth em paths admin com ponto |
 
 ---
 
 ## 4. Auditoria de Banco de Dados
 
-### Implementação atual
+### Implementação (sem PostgreSQL)
 
-**Nenhum banco de dados** no código. Leads são despachados via:
+| Camada | Detalhe |
+|--------|---------|
+| Modelo | Documento: `leads[]`, `products[]`, `siteSettings?` |
+| Local | `apps/nexshape-site/db.json` |
+| Vercel sem Redis | `/tmp/nexshape-site-db.json` (**efêmero**) |
+| Produção | Redis: `admin:leads`, `admin:products`, `admin:site-settings` |
 
-- `noop_preview` → `console.info`
-- `webhook` → `fetch(CRM_WEBHOOK_URL)`
+### Entidades lógicas
 
-### Especificação planejada (Fabrica — não migrada)
-
-| Schema | Tabela | Finalidade |
-|--------|--------|------------|
-| `marketing` | `contact_submissions` | Persistência opcional de leads + LGPD |
-| `marketing` | `outbound_webhook_retries` | Fila de retry para CRM |
-
-**Modo A (atual):** stateless, sem `DATABASE_URL`  
-**Modo B (futuro):** PostgreSQL 15+, Drizzle ou Prisma
+| Entidade | Campos críticos |
+|----------|-----------------|
+| `Lead` | PII, `status` (novo/atendimento/convertido/perdido), consent |
+| `ProductCustomization` | 7 slugs fixos, textos, `appHost*`, `appAccessMode` |
+| `SiteSettings` | `whatsappPhone`, `whatsappDisplay` |
 
 ### Verificações
 
 | Item | Status |
 |------|--------|
-| Migrations | **Ausentes** |
-| Seeds | **Ausentes** |
+| Migrations SQL | Ausentes |
 | FK / índices | N/A |
-| Soft deletes | N/A |
-| Multi-tenant | Não previsto no MVP marketing |
-| Tabelas não utilizadas | N/A |
+| Soft delete | DELETE físico em leads |
+| Auditoria de alterações | Ausente |
+| Multi-tenant | Não |
+| **`db.json` no `.gitignore`** | **Não** — risco PII no Git |
+| Spec Fabrica Postgres | Planejado, não migrado |
 
 ---
 
@@ -230,41 +236,31 @@ Autenticação, dashboard, vendas, estoque, financeiro, relatórios internos, mu
 
 | Controle | Status | Evidência |
 |----------|--------|-----------|
-| Autenticação | N/A (site público) | — |
-| Autorização | N/A | — |
-| CSRF | Parcial | Same-origin `fetch`; sem token explícito (aceitável para API JSON pública) |
-| XSS | Parcial | React escapa por padrão; sem CSP customizada |
+| Auth admin | Implementada | `lib/admin/auth.ts`, cookie httpOnly |
+| RBAC | Ausente | Senha única `ADMIN_PASSWORD` |
+| CSRF admin | Parcial | SameSite=Lax; sem token CSRF |
+| XSS | Parcial | React + CSP com `unsafe-inline`/`unsafe-eval` |
 | SQL Injection | N/A | Sem SQL |
-| Rate limiting | **Não implementado** | Comentário placeholder em `app/api/contact/route.ts` (linhas 35–36) |
-| Headers de segurança | **Não configurados** | `next.config.ts` vazio |
-| Criptografia em trânsito | Depende do host (HTTPS) | — |
-| Gestão de segredos | Parcial | `.env.example` documentado; `.env.local` no disco (não versionar) |
-| Logs sensíveis | Parcial | `noop_preview` loga e-mail; spec pede redação |
-| Upload de arquivos | N/A | — |
-| Honeypot | **Implementado** | Campo `website` |
-| SSRF no webhook | **Mitigado** | URL só via env, `redirect: "manual"`, timeout 12s em `lib/contact/dispatch.ts` |
-| LGPD | Parcial | Checkbox consent + páginas legais; sem DPIA automatizado |
-| CAPTCHA | **Não implementado** | Recomendado na spec (Turnstile/hCaptcha) |
-| Dependências | **Crítico** | `npm audit`: Next.js com múltiplos CVEs; fix sugere `15.5.18` |
-
-### Controles já implementados em `POST /api/contact`
-
-- Limite de payload: `Content-Length` > 15000 → 413
-- Honeypot `website` preenchido → 400
-- Validação Zod estrita + telefone BR em `lib/contact/schema.ts`
-- Erros genéricos ao cliente (502 sem stack)
+| Rate limiting | Implementado | Contato 10/min; login 5/min; fallback memória |
+| Headers | Implementados | HSTS, CSP, X-Frame em `next.config.ts` |
+| Turnstile | Opcional | Gap: UI usa só site key; API exige par completo |
+| Honeypot | OK | Campo `website` |
+| SSRF webhook | Mitigado | URL via env, `redirect: manual` |
+| `SESSION_SECRET` | Parcial | Fallback = senha + `_salt_secret` |
+| LGPD | Parcial | Consent + páginas legais |
+| npm audit | Moderado | postcss (transitivo); tmp em dev (`@lhci/cli`) |
 
 ---
 
 ## 6. Auditoria de Permissões
 
-| Perfil | Roles | Módulos | Escalonamento |
-|--------|-------|---------|---------------|
-| Visitante anônimo | — | Todas as páginas + POST contact | Nenhum (sem auth) |
-| Operador CRM | Externo | Recebe webhook | Depende do CRM |
-| Admin sistema | **Inexistente** | — | — |
+| Perfil | Módulos | Escalonamento |
+|--------|---------|---------------|
+| Visitante | Site + POST contact | Abuso de formulário |
+| Admin (senha única) | Leads, produtos, WhatsApp | Compromisso de `ADMIN_PASSWORD` = acesso total |
+| CRM externo | Recebe webhook | Fora do app |
 
-**Risco de escalonamento:** baixo (superfície só marketing). Risco principal é **abuso do endpoint público**, não privilege escalation.
+Não há roles, permissions granulares, 2FA nem audit log de ações admin.
 
 ---
 
@@ -272,58 +268,60 @@ Autenticação, dashboard, vendas, estoque, financeiro, relatórios internos, mu
 
 ### `POST /api/contact`
 
-| Aspecto | Detalhe |
-|---------|---------|
-| Autenticação | Nenhuma |
-| Payload | JSON: `fullName`, `email`, `phone`, `companyName`, `productInterest`, `message`, `consentAccepted`, `consentPolicyVersion?`, `website` (honeypot), `sourcePath?` |
-| Validação | Zod v4, alinhado OpenAPI Fabrica |
-| Respostas | `200 { ok: true }`, `400`, `413`, `422` + issues, `502` |
-| Versionamento | Não (`/api/contact` v1 implícita) |
-| Rate limit | **Não** |
-| Documentação | `Fabrica/outputs/2026-05-13-projeto-piloto-builder/06-api-spec.openapi.yaml` |
+- Auth: nenhuma | Rate: 10/min/IP | Validação: Zod + honeypot + Turnstile (se ambas chaves)
+- Side effects: `saveLead()` + `dispatchLead()`
+- Respostas: 200, 400, 413, 422, 429, 502
 
 ### `GET /api/health`
 
-| Aspecto | Detalhe |
-|---------|---------|
-| Resposta | `{ "status": "ok" }` |
-| Uso | Liveness para monitoramento |
+- Retorna `status`, `service`, `storage`, `timestamp`; `degraded` se storage indisponível
+
+### Admin (cookie `paivatech_admin_session`)
+
+| Endpoint | Métodos |
+|----------|---------|
+| `/admin/api/login` | POST |
+| `/admin/api/logout` | POST |
+| `/admin/api/leads` | GET, PUT, DELETE |
+| `/admin/api/products` | GET, PUT |
+| `/admin/api/contact` | GET, PUT |
+
+OpenAPI Fabrica: parcial vs implementação atual (persistência + admin).
 
 ---
 
 ## 8. Integrações Externas
 
-| Serviço | Finalidade | URL | Credenciais | Custo | Webhooks | Risco | Alternativa |
-|---------|------------|-----|-------------|-------|----------|-------|-------------|
-| CRM (genérico) | Receber leads | `CRM_WEBHOOK_URL` (env) | `CRM_API_KEY` opcional | Depende do CRM | Entrada no CRM | Indisponibilidade CRM → 502 | Resend/SendGrid como e-mail (spec) |
-| Google Fonts | Tipografia | CDN Google | Nenhuma | Gratuito | — | Privacidade/GDPR | Self-host fonts |
-| Vercel (previsto) | Hosting | — | Token deploy | Pago/free tier | Deploy hooks | Vendor lock-in leve | Cloudflare Pages |
-| PaivaTech Portal | Backlink UX | `paivatechsolutions.com.br` | Nenhuma | — | — | Link quebrado se domínio mudar | Configurável via env |
+| Serviço | Finalidade | Credenciais | Risco |
+|---------|------------|-------------|-------|
+| CRM webhook | Leads JSON | `CRM_WEBHOOK_URL`, `CRM_API_KEY?` | 502 se CRM down; sem allowlist URL |
+| Upstash | Storage + rate limit | REST URL + token | Token = leitura/escrita total |
+| Turnstile | CAPTCHA | Site + secret | Config incompleta = bypass API |
+| WhatsApp | CTA `wa.me` | Admin ou env | Placeholder se vazio |
+| Vercel | Hosting | Dashboard | — |
+| Google Fonts | Fonts | — | Privacidade |
 
-**Não integrados:** WhatsApp API, SMS, ERP, bancos, APIs fiscais, Stripe.
+**Não integrados:** WhatsApp Business API, SMS, ERP, bancos, APIs fiscais, e-mail transacional server-side.
 
 ---
 
 ## 9. Processamento de Pagamentos
 
-**Não aplicável** neste repositório. Nenhum gateway, checkout, assinatura, webhook de pagamento ou fluxo PCI. Menções a Stripe/PIX existem apenas em copy de produto (ex.: ConsultaTech, PaivaGrowth).
+**Não aplicável.** Menções a Stripe, PIX e checkout existem apenas em copy das landings (`consultatech`, `paivatech-commerce`, `paivagrowth`). Sem PCI, gateway ou webhooks de pagamento.
 
 ---
 
 ## 10. Auditoria de Performance
 
-| Item | Status | Observação |
-|------|--------|------------|
-| Queries lentas / N+1 | N/A | Sem DB |
-| Cache | Padrão Next.js | Sem Redis |
-| Filas | Não | Retry webhook só na spec DB |
-| Assets | Parcial | Hero PNG ausente; SVGs em `public/branding/` |
-| Lazy loading | Parcial | `next/image` na home (asset faltando) |
-| Paginação | N/A | Site estático |
-| SSG/ISR | Parcial | 4 slugs pré-gerados em `/produtos/[slug]` |
-| `/contato` | `force-dynamic` | Correto para `searchParams` |
+| Item | Avaliação |
+|------|-----------|
+| Queries / N+1 | N/A; listagem admin O(n) em JSON/Redis |
+| Cache | Padrão Next + CDN |
+| SSG | `generateStaticParams` 7 slugs; `/produtos/[slug]` `force-dynamic` |
+| Serverless | Cold start + primeira leitura Redis |
+| Lighthouse | Advisory no CI |
 
-**Recomendações:** incluir todas as landings no sitemap; completar SSG; otimizar imagens hero; considerar `@next/bundle-analyzer` no CI.
+Recomendações: paginar leads no admin; cache `getProductsDynamic()`; bundle analyzer opcional.
 
 ---
 
@@ -331,20 +329,10 @@ Autenticação, dashboard, vendas, estoque, financeiro, relatórios internos, mu
 
 | Critério | Avaliação |
 |----------|-----------|
-| Organização | **Boa** — `app/`, `components/`, `lib/` claros |
-| Padrões | Consistente com Next 15 App Router |
-| SOLID/DRY | Aceitável; duplicação leve entre landings e `/produtos/[slug]` |
-| Complexidade | Baixa |
-| Código duplicado | Landings por produto (aceitável para marketing) |
-| Dead code | Mínimo |
-| Comentários | Adequados em pontos de segurança |
-| Config vazia | `next.config.ts` sem opções — débito técnico |
-
-### Inconsistências detectadas
-
-1. `generateStaticParams` com 4 slugs vs 7 em `PRODUCT_DEFINITIONS` (`app/produtos/[slug]/page.tsx`)
-2. `lib/contact/query-param.ts` sem mapeamento para `kanban`, `marketing`, `consultatech`
-3. Sitemap usa `/produtos/{slug}` mas navegação usa URLs dedicadas (`components/SiteHeader.tsx` `ROUTE_MAP`)
+| Organização | Boa — `app/`, `components/`, `lib/` por domínio |
+| Padrões Next 15 | Consistente |
+| Complexidade | Baixa–média |
+| Débito | Rotas `/acessar` incompletas; Turnstile client/server; `db.json` fora do gitignore |
 
 ---
 
@@ -352,43 +340,38 @@ Autenticação, dashboard, vendas, estoque, financeiro, relatórios internos, mu
 
 | Tipo | Status |
 |------|--------|
-| Unitários | **Ausentes** |
-| Integração | **Ausentes** |
-| E2E (Playwright) | **Ausentes** |
-| Cobertura | 0% |
-| Script `test` | **Ausente** em `package.json` |
-| Spec Fabrica | `08-test-plan.json` define Vitest + Lighthouse — **não implementado** |
+| Unitários | **11 arquivos, 39 casos** — passando |
+| Integração API | Parcial (`app/api/contact/route.test.ts`) |
+| E2E | Ausente |
+| Admin / middleware / Redis | Não cobertos |
+| Cobertura % | Sem threshold no CI |
+
+Arquivos: `schema`, `query-param`, `rate-limit`, `turnstile`, `redact`, `whatsapp`, `resolve-app-url`, `product-access-redirect`, `site-settings`, `product-interest-options`, `route.test.ts`.
 
 ---
 
 ## 13. Auditoria de Frontend
 
-| Aspecto | Status | Notas |
-|---------|--------|-------|
-| Responsividade | Bom | Tailwind, layout `max-w-5xl` |
-| UX/UI | Bom | Dark mode forçado, glass/gradientes em `globals.css` |
-| Acessibilidade | Parcial | Sem auditoria axe automatizada |
-| Performance | Médio | Sem Lighthouse CI; asset hero faltando |
-| SEO | Parcial | Metadata por página; sitemap incompleto |
-| i18n | `pt-BR` fixo | Adequado ao mercado alvo |
+| Aspecto | Status |
+|---------|--------|
+| Responsividade | Bom (`max-w-7xl`, Tailwind) |
+| UX/UI | Bom — dark theme, `ProductFinalCta`, admin funcional |
+| Acessibilidade | Parcial — sem axe automatizado |
+| Performance | Médio — Lighthouse advisory |
+| SEO | Bom — sitemap com landings, robots bloqueia `/admin` |
+| i18n | `pt-BR` fixo |
 
 ---
 
 ## 14. Auditoria de Deploy
 
-| Item | Recomendação |
-|------|--------------|
-| Servidor | Vercel ou Node + PM2 |
-| Node | 20 LTS ou 22 LTS em produção |
-| Banco | Opcional PostgreSQL 15+ |
-| Redis | Não necessário no MVP |
-| Filas | Não no MVP |
-| Cron | Não |
-| Storage | Estático via CDN do host |
-| SSL | Automático (Vercel) |
-| DNS | Apex → www (TBD domínio canônico) |
-| Backups | N/A sem DB; CRM é sistema de registro |
-| Monitoramento | `/api/health` + uptime externo |
+| Item | Detalhe |
+|------|---------|
+| Plataforma | Vercel, root `apps/nexshape-site`, `gru1` |
+| CI | lint → typecheck → test → build → lighthouse (advisory) |
+| Node | 22 no CI |
+| Redis | Upstash recomendado (não Postgres) |
+| SSL | Automático Vercel |
 
 ---
 
@@ -396,88 +379,73 @@ Autenticação, dashboard, vendas, estoque, financeiro, relatórios internos, mu
 
 ### Enviar
 
-```
-apps/nexshape-site/
-├── app/
-├── components/
-├── lib/
-├── public/
-├── package.json
-├── package-lock.json
-├── next.config.ts
-├── tsconfig.json
-├── tailwind.config.ts
-├── postcss.config.mjs
-├── eslint.config.mjs
-└── (opcional) vercel.json quando criado
-```
+`app/`, `components/`, `lib/`, `public/`, `middleware.ts`, `package.json`, `package-lock.json`, `next.config.ts`, `vercel.json`, configs TS/Tailwind/ESLint.
 
 ### NÃO enviar
 
-| Pasta/arquivo | Motivo |
-|---------------|--------|
-| `node_modules/` | Instalar no CI/host |
-| `.next/` | Gerado no build |
-| `.env.local` | Segredos locais |
-| `Fabrica/node_modules/` | Ferramenta dev separada |
-| `Fabrica/outputs/*` (exceto política interna) | Artefatos de spec |
-| `docto/` | Documentação interna (opcional no deploy) |
+| Item | Motivo |
+|------|--------|
+| `node_modules/`, `.next/` | CI gera |
+| `.env.local`, `.env` | Segredos |
+| **`db.json`** | PII — nunca em artefato |
+| `tmp-cookies.txt` | Artefato local |
+| `Fabrica/`, `docto/` | Não necessários ao runtime |
 
-### Build steps
+### Build
 
 ```bash
 cd apps/nexshape-site
 npm ci
 npm run build
-npm run start   # ou deploy Vercel
 ```
 
 ---
 
 ## 16. Checklist de Configuração do Servidor
 
-| Item | Necessário |
-|------|------------|
-| Node.js 20+ | Sim |
-| npm | Sim |
-| PostgreSQL | Opcional (modo B) |
-| Redis | Não |
-| Supervisor | Não (se Vercel) |
-| Nginx/Apache | Não (se Vercel) |
-| SSL | Sim |
-| Composer/PHP | Não |
-| Python | Não |
+| Item | Vercel | VPS |
+|------|--------|-----|
+| Node 20+ | Gerenciado | Sim |
+| Upstash Redis | **Recomendado** | REST API |
+| PostgreSQL | Não necessário | Opcional futuro |
+| Nginx/Supervisor | Não | Se VPS |
+| SSL | Automático | Certbot |
 
 ---
 
 ## 17. Passo a Passo de Deploy
 
-1. Provisionar projeto na Vercel (ou VPS com Node).
-2. Configurar domínio canônico com CNAME e redirect apex.
-3. Conectar repositório Git (recomendado inicializar Git no monorepo).
-4. **Root directory:** `apps/nexshape-site`.
-5. `npm ci` → `npm run build`.
-6. Configurar variáveis (seção 18).
-7. Ativar CRM: `LEAD_DISPATCH_MODE=webhook` + teste POST.
-8. Smoke: home, contato, lead QA, `/api/health`, sitemap, robots.
-9. Monitorar erros 5xx em `/api/contact` na primeira semana.
+1. Push monorepo → CI verde.
+2. Vercel: importar, **Root Directory** = `apps/nexshape-site`.
+3. Variáveis Production ([seção 18](#18-variáveis-de-ambiente)).
+4. Deploy preview → smoke (`/`, `/api/health`, `/contato`, admin login).
+5. Domínio → atualizar `NEXT_PUBLIC_SITE_URL` → redeploy.
+6. Lead QA no CRM (`LEAD_DISPATCH_MODE=webhook`).
+7. Uptime em `/api/health`.
+
+Detalhes: [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md), [GIT_SETUP.md](./GIT_SETUP.md), [TESTE_LOCAL.md](./TESTE_LOCAL.md).
 
 ---
 
 ## 18. Variáveis de Ambiente
 
-### Implementadas (`.env.example`)
-
-| Variável | Obrigatória prod | Descrição |
-|----------|------------------|-----------|
+| Variável | Obrigatória (prod) | Descrição |
+|----------|-------------------|-----------|
 | `NEXT_PUBLIC_SITE_URL` | Sim | URL canônica |
 | `LEAD_DISPATCH_MODE` | Sim | `webhook` em prod |
-| `CRM_WEBHOOK_URL` | Se webhook | URL do CRM |
-| `CRM_API_KEY` | Opcional | Bearer para CRM |
-
-### Planejadas (spec Fabrica, não no `.env.example`)
-
-`DATABASE_URL`, `EMAIL_API_KEY`, `SMTP_*`, `TURNSTILE_*`, `PRIVACY_POLICY_VERSION`, `CAPTCHA_PROVIDER`
+| `CRM_WEBHOOK_URL` | Se webhook | Destino leads |
+| `CRM_API_KEY` | Opcional | Bearer CRM |
+| `UPSTASH_REDIS_REST_URL` | **Fortemente recomendado** | Storage + rate limit |
+| `UPSTASH_REDIS_REST_TOKEN` | Idem | Par |
+| `ADMIN_PASSWORD` | Sim | ≠ `admin123` |
+| `SESSION_SECRET` | Recomendado | Independente da senha |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Recomendado | **Par** com secret |
+| `TURNSTILE_SECRET_KEY` | Recomendado | **Par** com site key |
+| `NEXT_PUBLIC_APP_DOMAIN_PRODUCTION` | Opcional | Default `paivatech.com.br` |
+| `NEXT_PUBLIC_APP_DOMAIN_DEVELOPMENT` | Opcional | Dev apps |
+| `NEXT_PUBLIC_FORCE_APP_ACCESS_MODE` | Opcional | `production` \| `development` |
+| `APP_REDIRECT_ALLOWED_HOSTS` | Opcional | Hosts extras redirect |
+| `NEXT_PUBLIC_CONTACT_WHATSAPP_*` | Opcional | Fallback; admin sobrescreve |
 
 ---
 
@@ -485,11 +453,11 @@ npm run start   # ou deploy Vercel
 
 | Cenário | Estratégia |
 |---------|------------|
-| Código | Git + tags de release |
-| Leads | CRM externo; opcional Postgres |
-| Retenção LGPD | Definir política quando DB ativo |
-| Restore | Redeploy versão anterior (Vercel rollback) |
-| Testes | Restore drill trimestral se Postgres ativado |
+| Código | Git + rollback Vercel |
+| Leads | Upstash backup/export + CRM como registro primário |
+| `db.json` local | Backup manual; não usar em prod serverless |
+| LGPD | Exclusão manual (admin DELETE + CRM) |
+| Restore | Promote deployment anterior; restaurar Redis se snapshot disponível |
 
 ---
 
@@ -497,13 +465,12 @@ npm run start   # ou deploy Vercel
 
 | Ferramenta | Uso |
 |------------|-----|
-| Vercel Logs / Log Drain | Erros runtime |
-| Uptime (BetterStack, cron-job.org) | `GET /` e `GET /api/health` |
-| Sentry (futuro) | Stack traces |
-| Alertas | Erro `/api/contact` > 5% / 15 min |
-| Lighthouse CI | Performance em PRs |
+| UptimeRobot / Better Stack | `GET /api/health` a cada 5 min |
+| Vercel Logs / Log Drain | 5xx em `/api/contact` e admin |
+| Sentry (futuro) | Exceções |
+| Vercel Analytics | Web Vitals (opcional) |
 
-**Evitar:** logar corpo completo de `message` ou PII em produção.
+Evitar logar PII completo; usar `lib/security/redact.ts`.
 
 ---
 
@@ -511,13 +478,12 @@ npm run start   # ou deploy Vercel
 
 | Item | Status |
 |------|--------|
-| Política de privacidade | `/privacidade` |
-| Consentimento | `consentAccepted: true` obrigatório |
-| Versão da política | `consentPolicyVersion` opcional |
-| Exclusão de dados | Depende CRM/DB — não automatizado |
-| Criptografia | TLS (host) |
-| DPIA | Recomendado para dados sensíveis em `message` |
-| Analytics/cookies | Não implementados |
+| `/privacidade` | Presente (`PRIVACY_POLICY_VERSION`) |
+| Consentimento | Obrigatório no schema |
+| Exclusão | Manual (admin + CRM) |
+| Portabilidade | Export CSV admin |
+| Criptografia repouso | Não (JSON/Redis texto claro) |
+| Revisão jurídica | Pendente (copy ConsultaTech) |
 
 ---
 
@@ -525,30 +491,30 @@ npm run start   # ou deploy Vercel
 
 | Documento | Status |
 |-----------|--------|
-| README (site) | **Presente** (`apps/nexshape-site/README.md`) |
-| README (monorepo) | **Presente** (`README.md`) |
-| Git setup | Instruções em `docto/GIT_SETUP.md` (CLI git não disponível no ambiente da auditoria) |
-| README Fabrica | Presente |
-| API docs | OpenAPI em Fabrica |
-| Este relatório | **Presente** (`docto/Auditoria_Relatorio.md`) |
-| Template auditoria | `docto/Auditoria_Completa.txt` |
+| `README.md` (monorepo) | Atualizado |
+| `apps/nexshape-site/README.md` | Presente |
+| `docto/DEPLOY_VERCEL.md` | Presente |
+| `docto/TESTE_LOCAL.md` | Presente |
+| `docto/GIT_SETUP.md` | Presente |
+| Este relatório | **v2.0** |
+| OpenAPI Fabrica | Parcial vs admin/persistência |
 
 ---
 
 ## 23. Riscos Críticos
 
-| # | Risco | Impacto | Prob. | Status mitigação |
-|---|-------|---------|-------|-------------------|
-| R1 | Sem rate limiting em `/api/contact` | DoS, spam, custo CRM | Alta | ✅ Mitigado — memória + Upstash opcional (`lib/security/contact-rate-limit.ts`) |
-| R2 | CVEs Next.js (npm audit critical) | XSS, SSRF, DoS | Média | ✅ Mitigado — `next@15.5.18` (2 moderate restantes em postcss transitivo) |
-| R3 | `noop_preview` em produção | Perda de leads | Alta se erro config | ⬜ Configuração deploy (ação operacional) |
-| R4 | Asset hero ausente | UX/LCP ruim | Certa | ✅ Mitigado — `next/image` + `/branding/logo-icon.svg` |
-| R5 | Sem testes automatizados | Regressões | Média | ✅ Parcial — Vitest 5 testes (query-param, rate-limit) |
-| R6 | Sem security headers | XSS/clickjacking | Média | ✅ Mitigado — `next.config.ts` headers |
-| R7 | Workspace sem Git | Sem CI/rollback | Alta | ✅ Parcial — repo local + commit; **push remoto** pendente |
-| R8 | Sitemap incompleto | SEO | Certa | ✅ Mitigado — 7 landings + legado `/produtos/*` |
-| R9 | Copy ConsultaTech/Credit | Legal/reputação | Média | ⬜ Pendente (jurídico) |
-| R10 | `.env.local` no disco | Vazamento se commit | Baixa | ✅ Mitigado — `.gitignore` permite `.env.example` |
+| # | Risco | Impacto | Prob. | Mitigação |
+|---|-------|---------|-------|-----------|
+| R1 | Prod sem Upstash | Perda de leads entre deploys | Alta | Exigir Redis; alertar `storage.mode !== redis` |
+| R2 | `noop_preview` em prod | Leads só em log | Alta | `LEAD_DISPATCH_MODE=webhook` |
+| R3 | Turnstile só site key | Bots bypass CAPTCHA | Média | UI = `isTurnstileEnabled()` |
+| R4 | `db.json` commitável | Vazamento PII | Média | `.gitignore` + remover do histórico se commitado |
+| R5 | Admin senha vazada | Exfiltração leads/redirect | Média | Senha forte + `SESSION_SECRET` |
+| R6 | Rotas `/acessar` faltando | 404 em 6 produtos | **Alta** | Route dinâmica ou 6 handlers |
+| R7 | CRM URL sem allowlist | SSRF se env comprometido | Baixa | Allowlist hosts |
+| R8 | Copy ConsultaTech/PIX | Legal/reputação | Média | Revisão jurídica |
+| R9 | CSP `unsafe-eval` | XSS ampliado | Média | Endurecer CSP |
+| R10 | Sem testes admin/E2E | Regressão auth | Média | Vitest + Playwright |
 
 ---
 
@@ -558,122 +524,296 @@ npm run start   # ou deploy Vercel
 
 | ID | Melhoria | Status |
 |----|----------|--------|
-| C1 | Rate limiting (`@upstash/ratelimit` ou edge) | ✅ |
-| C2 | Atualizar Next.js (ex.: 15.5.18+) | ✅ |
-| C3 | CRM webhook em prod testado | ⬜ |
-| C4 | Hero image ou remover referência | ✅ |
-| C5 | Git + CI (lint, build, audit) | ⬜ Parcial (CI ✅; commit local ✅; remote pendente) |
+| C1 | Upstash obrigatório em prod | ⬜ |
+| C2 | CRM webhook testado E2E | ⬜ |
+| C3 | `/acessar` para 7 produtos | ⬜ |
+| C4 | `db.json` → `.gitignore` | ✅ |
+| C5 | Turnstile alinhado (UI = servidor) | ✅ |
 
 ### Alta
 
 | ID | Melhoria | Status |
 |----|----------|--------|
-| A1 | Security headers (`next.config` / `vercel.json`) | ✅ |
-| A2 | Sitemap com todas as landings | ✅ |
-| A3 | `generateStaticParams` + `query-param` (7 produtos) | ✅ |
-| A4 | README deploy | ✅ |
-| A5 | CAPTCHA antes de tráfego pago | ✅ (Turnstile opcional via env) |
+| A1 | `SESSION_SECRET` obrigatório em prod | ✅ |
+| A2 | Compare timing-safe (senha/HMAC) | ✅ |
+| A3 | Rate limit APIs admin | ✅ |
+| A4 | CSRF ou `SameSite=Strict` admin | ⬜ |
+| A5 | Testes middleware + login + leads API | ⬜ |
 
 ### Média
 
 | ID | Melhoria | Status |
 |----|----------|--------|
-| M1 | Vitest schemas + API | ✅ (18 testes incl. `POST /api/contact`) |
-| M2 | Lighthouse CI | ✅ (advisory no CI) |
-| M3 | WhatsApp real no contato | ⬜ Parcial (env `NEXT_PUBLIC_CONTACT_WHATSAPP_*`) |
-| M4 | CI validate Fabrica | ✅ (`.github/workflows/fabrica-validate.yml`) |
-| M5 | Postgres modo B (se exigido LGPD) | ⬜ |
+| M1 | Audit log admin | ⬜ |
+| M2 | Paginação leads | ⬜ |
+| M3 | Allowlist CRM webhook | ⬜ |
+| M4 | CSP sem `unsafe-eval` | ⬜ |
+| M5 | Playwright E2E smoke | ⬜ |
+| M6 | Postgres modo B (Fabrica) | ⬜ |
 
 ### Baixa
 
 | ID | Melhoria | Status |
 |----|----------|--------|
-| B1 | Redirect 301 URLs produto unificadas | ✅ |
-| B2 | Self-host Geist | ⬜ |
-| B3 | email security@ | ⬜ |
+| B1 | Self-host fonts | ⬜ |
+| B2 | Sentry | ⬜ |
+| B3 | Substituir bypass `pathname.includes(".")` | ✅ |
+
+### Já concluídas (v1.x)
+
+Rate limit, Next 15.5.18, security headers, sitemap 7 landings, Turnstile base, Vitest 39 casos, CI, redirects 301, painel admin, persistência JSON/Redis, middleware.
 
 ---
 
 ## 25. Nota Geral do Sistema
 
-| Dimensão | Nota | Data |
-|----------|------|------|
-| Arquitetura | 8,0 | 20/05/2026 |
-| Segurança | 8,0 | 20/05/2026 |
-| Performance | 7,5 | 20/05/2026 |
-| Código | 8,0 | 20/05/2026 |
-| UX/UI | 8,5 | 20/05/2026 |
-| Testes | 7,0 | 20/05/2026 |
-| Deploy | 8,0 | 20/05/2026 |
-| Escalabilidade | 7,0 | 20/05/2026 |
+| Dimensão | Nota (0–10) | Data |
+|----------|-------------|------|
+| Arquitetura | 7,5 | 21/05/2026 |
+| Segurança | 7,5 | 21/05/2026 |
+| Performance | 7,5 | 21/05/2026 |
+| Código | 8,0 | 21/05/2026 |
+| UX/UI | 8,5 | 21/05/2026 |
+| Testes | 7,0 | 21/05/2026 |
+| Deploy | 8,0 | 21/05/2026 |
+| Escalabilidade | 6,5 | 21/05/2026 |
 
-**Nota geral ponderada: 8,0 / 10** (após implementação v1.3)
+**Nota geral ponderada: 7,6 / 10** (após v2.1)
 
-> Recalcular notas após conclusão dos itens P0 do plano de ação.
+- **Código ~85%** pronto para deploy técnico.
+- **Go-live operacional** depende de Upstash, CRM, secrets e DNS.
+- Recalcular para **8,0+** após P0 do [plano §27](#27-plano-de-ação-prioritizado).
 
 ---
 
 ## 26. Checklist Go-Live
 
-| Item | Status | Data conclusão |
-|------|--------|----------------|
-| Build `npm run build` sem erro | ✅ | 20/05/2026 |
-| Variáveis prod configuradas | ⬜ | |
+| Item | Status | Data |
+|------|--------|------|
+| Build + 39 testes CI | ✅ | 21/05/2026 |
+| Middleware + admin | ✅ | 21/05/2026 |
+| Rate limit contact/login | ✅ | 21/05/2026 |
+| Next 15.5.18 + headers | ✅ | 21/05/2026 |
+| Sitemap 7 landings | ✅ | 21/05/2026 |
+| Painel admin leads/produtos/WhatsApp | ✅ | 21/05/2026 |
+| Upstash Redis em prod | ⬜ **Bloqueador** | |
 | CRM webhook testado | ⬜ **Bloqueador** | |
-| Rate limiting | ✅ | 20/05/2026 |
-| Next.js patched | ✅ | 20/05/2026 |
-| Hero image | ✅ | 20/05/2026 |
-| Sitemap completo | ✅ | 20/05/2026 |
-| Testes mínimos API | ✅ Parcial (Vitest unitário) | 20/05/2026 |
-| Git + CI | ✅ Parcial (commit local; push remoto pendente) | 20/05/2026 |
-| Guia deploy Vercel | ✅ | 20/05/2026 |
-| Lighthouse CI | ✅ advisory | 20/05/2026 |
-| Revisão jurídica legais + Credit | ⬜ | |
-| Monitoramento uptime | ⬜ | |
+| `ADMIN_PASSWORD` + `SESSION_SECRET` prod | ⬜ | |
+| Turnstile (ambas chaves) antes ads pagos | ⬜ | |
+| Rotas `/acessar` 7 produtos | ✅ | 21/05/2026 |
+| `db.json` fora do Git | ✅ | 21/05/2026 |
+| Git push remoto + Vercel | ⬜ | |
 | Domínio + SSL | ⬜ | |
-| README deploy | ✅ | 20/05/2026 |
-
-**Bloqueadores restantes:** CRM real em produção, `git init` + repositório remoto, Upstash recomendado em prod.
+| Monitoramento uptime | ⬜ | |
+| Revisão jurídica | ⬜ | |
 
 ---
 
 ## 27. Plano de Ação Prioritizado
 
-| Prioridade | ID | Item | Descrição | Impacto | Esforço | Status | Concluído em |
-|------------|-----|------|-----------|---------|---------|--------|--------------|
-| P0 | C1 | Rate limit | Upstash + fallback memória | Alto | Médio | ✅ | 20/05/2026 |
-| P0 | C2 | Patch Next | `15.5.18` | Alto | Baixo–Médio | ✅ | 20/05/2026 |
-| P0 | C3 | CRM prod | `webhook` + URL + teste | Alto | Baixo | ⬜ | |
-| P0 | C5 | Git + CI | lint, build, audit no PR | Alto | Médio | ⬜ Parcial (push remoto) | 20/05/2026 |
-| P1 | A1 | Security headers | X-Frame, nosniff, Referrer-Policy | Alto | Baixo | ✅ | 20/05/2026 |
-| P1 | A2 | Sitemap + hero | SEO/UX | Médio | Baixo | ✅ | 20/05/2026 |
-| P1 | A5 | CAPTCHA | Turnstile opcional | Alto | Médio | ✅ | 20/05/2026 |
-| P1 | A4 | README | Operação | Médio | Baixo | ✅ | 20/05/2026 |
-| P2 | M1 | Vitest | schema + query-param + rate-limit + turnstile | Médio | Médio | ✅ | 20/05/2026 |
-| P2 | A3 | SSG/query-param | 7 produtos | Baixo | Baixo | ✅ | 20/05/2026 |
-| P2 | M5 | Postgres B | LGPD/retry | Médio | Alto | ⬜ | |
-| P3 | M2 | Lighthouse CI | Performance advisory | Baixo | Médio | ✅ | 20/05/2026 |
-| P3 | B1 | URLs unificadas | Redirects 301 em `next.config.ts` | Baixo | Médio | ✅ | 20/05/2026 |
+### Visão das fases
+
+| Fase | Objetivo | Prazo sugerido | Critério de saída |
+|------|----------|----------------|-------------------|
+| **Fase 0 — Bloqueadores go-live** | Site em produção recebendo leads com persistência | 1–3 dias | Health `storage.mode: redis`, lead no CRM, domínio ativo |
+| **Fase 1 — Segurança e integridade** | Fechar gaps que expõem dados ou quebram UX | 1 semana | Turnstile alinhado, `db.json` ignorado, secrets fortes |
+| **Fase 2 — Funcionalidade completa** | Todos os produtos com “Acessar sistema” | 1 semana | 7 rotas `/acessar` OK |
+| **Fase 3 — Qualidade e compliance** | Testes, hardening, jurídico | 2–4 semanas | Testes admin, revisão legal, monitoramento |
+| **Fase 4 — Evolução** | Escala e modo B opcional | Backlog | Postgres se política exigir |
+
+---
+
+### Fase 0 — Bloqueadores go-live (P0)
+
+| ID | Item | Descrição | Impacto | Esforço | Responsável | Status | Critério de aceite |
+|----|------|-----------|---------|---------|-------------|--------|-------------------|
+| P0-01 | **Upstash Redis** | Criar database Upstash; configurar `UPSTASH_REDIS_REST_URL` e `TOKEN` na Vercel Production | Crítico | 1h | DevOps | ⬜ | `GET /api/health` → `storage.mode: "redis"` |
+| P0-02 | **CRM webhook** | `LEAD_DISPATCH_MODE=webhook`, `CRM_WEBHOOK_URL`, `CRM_API_KEY` se necessário | Crítico | 2h | DevOps + Comercial | ⬜ | Formulário QA aparece no CRM em < 2 min |
+| P0-03 | **Secrets admin** | `ADMIN_PASSWORD` forte (≠ admin123), `SESSION_SECRET` aleatório 32+ chars | Crítico | 30 min | DevOps | ⬜ | Login admin OK; misconfig retorna 503 se senha fraca |
+| P0-04 | **GitHub + Vercel** | Push remoto; projeto Vercel root `apps/nexshape-site`; CI verde | Alto | 2h | DevOps | ⬜ | PR/push dispara workflow verde |
+| P0-05 | **Domínio + SSL** | DNS → Vercel; `NEXT_PUBLIC_SITE_URL` = domínio final; redeploy | Alto | 2h | DevOps | ⬜ | HTTPS 200 em `/`, sitemap, robots |
+| P0-06 | **Smoke pós-deploy** | Checklist: home, contato, admin, health, lead CRM | Alto | 1h | QA | ⬜ | Documento smoke assinado |
+
+**Ordem recomendada:** P0-04 → P0-01 → P0-02 → P0-03 → deploy → P0-05 → P0-06.
+
+---
+
+### Fase 1 — Segurança e integridade (P1)
+
+| ID | Item | Descrição | Impacto | Esforço | Status | Critério de aceite |
+|----|------|-----------|---------|---------|--------|-------------------|
+| P1-01 | **`db.json` no gitignore** | Adicionar `db.json` em `apps/nexshape-site/.gitignore`; remover do índice se tracked | Alto | 30 min | ✅ | 21/05/2026 | `git status` não lista `db.json` |
+| P1-02 | **Turnstile alinhado** | `ContactForm` recebe `turnstileEnabled` de `isTurnstileEnabled()` no servidor | Alto | 1h | ✅ | 21/05/2026 | Widget só com par completo de chaves |
+| P1-03 | **`SESSION_SECRET` obrigatório** | `isSessionSecretMisconfigured()` + login 503 em prod | Alto | 2h | ✅ | 21/05/2026 | Login bloqueado sem secret em prod |
+| P1-04 | **Turnstile em prod** | Ambas chaves na Vercel antes de tráfego pago | Alto | 30 min | ⬜ | Widget visível; bot direto na API bloqueado |
+| P1-05 | **Monitoramento uptime** | UptimeRobot/Better Stack em `/api/health` 5 min | Médio | 1h | ⬜ | Alerta configurado |
+| P1-06 | **WhatsApp produção** | Configurar em `/admin/contato` ou env | Médio | 30 min | ⬜ | Link wa.me real no site |
+
+---
+
+### Fase 2 — Funcionalidade (P1/P2)
+
+| ID | Item | Descrição | Impacto | Esforço | Status | Critério de aceite |
+|----|------|-----------|---------|---------|--------|-------------------|
+| P2-01 | **Rotas `/acessar` (7 produtos)** | `handleProductAccessGet` + route em cada landing | Alto | 4–8h | ✅ | 21/05/2026 | 7 paths `/acessar` (testes Vitest) |
+| P2-02 | **Rate limit admin API** | `enforceAdminApiRateLimit` 60/min em leads/products/contact | Médio | 2h | ✅ | 21/05/2026 | 429 após limite |
+| P2-03 | **Compare timing-safe** | `timingSafeEqualString` senha + HMAC | Médio | 2h | ✅ | 21/05/2026 | `lib/security/timing-safe.test.ts` |
+| P2-04 | **Middleware bypass** | `ADMIN_PUBLIC_PATHS` explícito | Médio | 1h | ✅ | 21/05/2026 | Sem `includes(".")` |
+
+---
+
+### Fase 3 — Qualidade e compliance (P2/P3)
+
+| ID | Item | Descrição | Impacto | Esforço | Status |
+|----|------|-----------|---------|---------|--------|
+| P3-01 | Testes admin | Vitest: `verifySessionToken`, login 401, leads PUT | Médio | 1 dia | ⬜ |
+| P3-02 | Playwright E2E | Smoke: contato → enviado; admin login → lista leads | Médio | 2 dias | ⬜ |
+| P3-03 | CSRF admin | Token ou `SameSite=Strict` | Médio | 4h | ⬜ |
+| P3-04 | Audit log admin | Quem alterou/deletou lead | Médio | 1 dia | ⬜ |
+| P3-05 | Allowlist CRM URL | Validar host do `CRM_WEBHOOK_URL` | Médio | 2h | ⬜ |
+| P3-06 | CSP endurecida | Remover `unsafe-eval` | Baixo | 4h | ⬜ |
+| P3-07 | Revisão jurídica | `/privacidade`, `/termos`, copy ConsultaTech | Alto (negócio) | Externo | ⬜ |
+| P3-08 | Política retenção leads | DPO + CRM | Médio | Externo | ⬜ |
+
+---
+
+### Fase 4 — Evolução (backlog)
+
+| ID | Item | Impacto | Esforço |
+|----|------|---------|---------|
+| P4-01 | Postgres modo B (Fabrica) | Médio | Alto |
+| P4-02 | Sentry + Log Drain | Médio | Médio |
+| P4-03 | Paginação leads admin | Baixo | Médio |
+| P4-04 | Self-host fonts | Baixo | Baixo |
+| P4-05 | RBAC admin (se múltiplos operadores) | Médio | Alto |
+
+---
+
+### Matriz resumida (prioridade × esforço)
+
+```
+                    Esforço baixo          Esforço alto
+Impacto crítico     P0-01,02,03, P1-01,02  P2-01 (/acessar)
+Impacto alto        P0-04,05, P1-04,05    P3-01,02 (testes)
+Impacto médio       P1-06, P2-02           P3-04, P4-01
+```
+
+---
+
+### Dependências entre itens
+
+```mermaid
+flowchart LR
+  P004[P0-04 GitHub/Vercel] --> P001[P0-01 Upstash]
+  P001 --> P002[P0-02 CRM]
+  P004 --> P003[P0-03 Secrets]
+  P001 --> P005[P0-05 Domínio]
+  P002 --> P006[P0-06 Smoke]
+  P005 --> P006
+  P001 --> P101[P1-04 Turnstile prod]
+  P201[P2-01 /acessar] --> P006
+```
+
+---
+
+### Registro de execução (preencher ao concluir)
+
+| ID | Concluído em | Responsável | Evidência (link/commit) |
+|----|--------------|-------------|-------------------------|
+| P0-01 | | | |
+| P0-02 | | | |
+| P0-03 | | | |
+| P0-04 | | | |
+| P0-05 | | | |
+| P0-06 | | | |
+| P1-01 | 21/05/2026 | Agent | `.gitignore` |
+| P1-02 | 21/05/2026 | Agent | `ContactForm` + contato/produto |
+| P1-03 | 21/05/2026 | Agent | `lib/admin/auth.ts` |
+| P2-01 | 21/05/2026 | Agent | 7× `acessar/route.ts` |
+| P2-02 | 21/05/2026 | Agent | `guard-admin-api.ts` |
+| P2-03 | 21/05/2026 | Agent | `timing-safe.ts` |
+| P2-04 | 21/05/2026 | Agent | `middleware.ts` |
+
+---
+
+## 28. Próximos passos (go-live)
+
+**Guia operacional completo:** [GO_LIVE_FASE0.md](./GO_LIVE_FASE0.md)  
+**Smoke script:** `docto/scripts/smoke-prod.ps1 -BaseUrl "https://SEU_DOMINIO"`
+
+O código está **pronto para deploy**; o go-live depende de **configuração operacional** e itens **P0** da [seção 27](#fase-0--bloqueadores-go-live-p0).
+
+### Passo 1 — GitHub
+
+Ver [GIT_SETUP.md](./GIT_SETUP.md). Resultado: CI `.github/workflows/nexshape-site-ci.yml` verde.
+
+### Passo 2 — Vercel
+
+Ver [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md). Root: `apps/nexshape-site`. Região: `gru1`.
+
+**Production obrigatório:**
+
+| Variável | Valor |
+|----------|-------|
+| `NEXT_PUBLIC_SITE_URL` | `https://www.seudominio.com.br` |
+| `LEAD_DISPATCH_MODE` | `webhook` |
+| `CRM_WEBHOOK_URL` | URL do CRM |
+| `ADMIN_PASSWORD` | Senha forte |
+| `UPSTASH_REDIS_REST_URL` | Upstash |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash |
+| `SESSION_SECRET` | String aleatória longa |
+| `TURNSTILE_SECRET_KEY` + `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Par completo (recomendado) |
+
+### Passo 3 — Domínio e smoke
+
+```powershell
+curl -s https://SEU_DOMINIO/api/health
+```
+
+Esperado com Redis:
+
+```json
+{
+  "status": "ok",
+  "service": "nexshape-site",
+  "storage": { "mode": "redis" },
+  "timestamp": "..."
+}
+```
+
+### Passo 4 — Monitoramento
+
+Uptime em `/api/health`; alertas 5xx em `/api/contact` (Vercel Logs).
+
+### Passo 5 — Negócio
+
+Revisão jurídica; WhatsApp real; política de retenção no CRM (LGPD).
+
+### Bloqueadores finais
+
+| # | Bloqueador | Item plano |
+|---|------------|------------|
+| 1 | Sem Redis em prod | P0-01 |
+| 2 | CRM não recebe leads | P0-02 |
+| 3 | Site não na Vercel | P0-04 |
+| 4 | Domínio inativo | P0-05 |
+| 5 | “Acessar sistema” 404 (6 produtos) | P2-01 |
+| 6 | Campanha paga sem jurídico | P3-07 |
 
 ---
 
 ## Conclusão
 
-O workspace **PaivaTech Solutions** concentra-se no site institucional **nexshape-site** (Next.js) para a Suite NexShape, com captura de leads via API e integração CRM por webhook. **Fabrica** é infraestrutura de especificação por agentes. Os **produtos SaaS** da suite **não estão implementados** neste repositório.
+O **nexshape-site** (v2.0) é um portal de marketing com **painel admin**, persistência **JSON/Redis**, captura de leads, integração CRM e configuração de produtos/WhatsApp. Os apps SaaS da suite **não estão neste repositório**.
 
-**Readiness para produção (v1.3):** Código e pipeline prontos; **18 testes**, Lighthouse CI advisory, guia `DEPLOY_VERCEL.md`, repositório Git com commit inicial. **Go-live:** push para GitHub, variáveis Vercel (CRM, Upstash, Turnstile), domínio e revisão jurídica.
+**Readiness:** nota **7,4/10** — executar [Fase 0 do plano §27](#fase-0--bloqueadores-go-live-p0) antes do go-live público.
 
 ---
 
 ## Instruções para manutenção deste documento
 
-Ao concluir qualquer correção:
-
-1. Atualizar **Última atualização** e **Versão** no cabeçalho.
-2. Registrar linha em **Histórico de atualizações**.
-3. Marcar item correspondente: `⬜` → `✅` nas seções 23, 24, 26 e 27.
-4. Se mitigar risco, atualizar coluna **Status mitigação** na seção 23.
-5. Recalcular notas na seção 25 se mudança for significativa.
-6. Remover bloqueador da seção 26 quando critério atendido.
-
-**Referência cruzada:** template original em `docto/Auditoria_Completa.txt`.
+1. Atualizar **Versão** e **Última atualização** no cabeçalho.
+2. Linha em **Histórico de atualizações**.
+3. Marcar `⬜` → `✅` nas seções 23, 24, 26, 27 e tabela **Registro de execução**.
+4. Recalcular notas na seção 25 quando P0/P1 concluídos.
+5. Referência: `docto/Auditoria_Completa.txt`.

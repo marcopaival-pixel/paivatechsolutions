@@ -1,8 +1,12 @@
 import { z } from "zod";
 
 import { PRODUCT_API_VALUES } from "../config/products";
+import { OTHER_PRODUCT_INTEREST } from "./product-interest-options";
 
-export const productInterestEnum = z.enum([...PRODUCT_API_VALUES, "Geral"] as unknown as [string, ...string[]]);
+export const productInterestEnum = z.enum([
+  ...PRODUCT_API_VALUES,
+  OTHER_PRODUCT_INTEREST,
+] as unknown as [string, ...string[]]);
 export type ProductInterest = z.infer<typeof productInterestEnum>;
 
 /** Base do JSON POST /api/contact (Zod v4: sem refine — permite `.omit()` no formulário). */
@@ -19,6 +23,8 @@ export const contactRequestBaseSchema = z
     /** Honeypot: deve permanecer vazio (campo oculto no markup). */
     website: z.string().default(""),
     sourcePath: z.string().max(512).optional(),
+    /** Cloudflare Turnstile — validado na rota quando CAPTCHA está ativo. */
+    cfTurnstileToken: z.string().optional(),
   })
   .strict();
 

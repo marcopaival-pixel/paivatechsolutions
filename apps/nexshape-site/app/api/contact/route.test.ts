@@ -48,6 +48,8 @@ describe("POST /api/contact", () => {
   it("rejects honeypot", async () => {
     const res = await postJson({ ...validBody, website: "bot" });
     expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toBe("honeypot");
   });
 
   it("returns 422 for invalid phone", async () => {
@@ -55,6 +57,13 @@ describe("POST /api/contact", () => {
     expect(res.status).toBe(422);
     const data = await res.json();
     expect(data.error).toBe("validation_failed");
+  });
+
+  it("accepts optional cfTurnstileToken when turnstile is disabled", async () => {
+    const res = await postJson({ ...validBody, cfTurnstileToken: "test-token" });
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data).toEqual({ ok: true });
   });
 
   it("returns 413 for oversized payload header", async () => {

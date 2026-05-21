@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Image from "next/image";
 import { Logo } from "@/components/Logo";
+import { ProductFinalCta } from "@/components/ProductFinalCta";
+import { ProductHeroCtas } from "@/components/ProductHeroCtas";
+import { ProductLandingTopBar } from "@/components/ProductLandingTopBar";
+import { getSystemAccessUrlBySlug } from "@/lib/products/landing-access";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "NexShape Saúde & Performance · Gestão Inteligente com IA",
@@ -9,7 +14,9 @@ export const metadata: Metadata = {
     "Sistema completo para gestão de treinos, avaliações físicas, bioimpedância, dietas e acompanhamento da evolução corporal dos alunos.",
 };
 
-export default function NexShapeFitnessPage() {
+export default async function NexShapeFitnessPage() {
+  const contactHref = "/contato?produto=fitness";
+  const systemAccessUrl = await getSystemAccessUrlBySlug("fitness");
   const benefits = [
     { title: "Gestão Multiempresa", description: "Controle várias unidades ou clínicas com um único acesso e isolamento total de dados.", icon: "🏢" },
     { title: "Inteligência Artificial", description: "NexBot e Orquestrador de Agentes para automatizar vendas, treinos e suporte.", icon: "🤖" },
@@ -65,26 +72,11 @@ export default function NexShapeFitnessPage() {
 
   return (
     <div className="relative isolate space-y-32 pb-20 overflow-hidden">
-      {/* Header Actions */}
-      <div className="fixed top-8 left-8 right-8 z-50 flex justify-between items-center pointer-events-none">
-        <Link 
-          href="/"
-          className="group flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all active:scale-95 pointer-events-auto"
-        >
-          <span className="transition-transform group-hover:-translate-x-1">←</span>
-          Voltar ao Portal
-        </Link>
-
-        <Link 
-          href="https://nexshape.com.br/admin/login"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all active:scale-95 pointer-events-auto"
-        >
-          Área do Cliente
-          <span className="transition-transform group-hover:translate-x-1">→</span>
-        </Link>
-      </div>
+      <ProductLandingTopBar
+        contactHref={contactHref}
+        systemAccessUrl={systemAccessUrl}
+        accentButtonClass="bg-indigo-600 shadow-indigo-500/20 hover:bg-indigo-500"
+      />
 
       {/* Background decoration with animated blobs */}
       <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
@@ -105,16 +97,12 @@ export default function NexShapeFitnessPage() {
             <p className="text-base leading-7 text-slate-400 max-w-xl">
               A plataforma robusta para academias, personal trainers, nutricionistas, clínicas de saúde e profissionais de educação física. Gestão completa de saúde e resultados com IA nativa.
             </p>
-            <div className="flex flex-wrap gap-6">
-              <Link 
-                href="https://nexshape.com.br" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-2xl bg-indigo-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-indigo-500/40 hover:bg-indigo-500 transition-all active:scale-95"
-              >
-                Conhecer o NexShape
-              </Link>
-            </div>
+            <ProductHeroCtas
+              contactHref={contactHref}
+              systemAccessUrl={systemAccessUrl}
+              primaryButtonClass="rounded-2xl bg-indigo-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-indigo-500/40 hover:bg-indigo-500 transition-all active:scale-95"
+              hideDemoButton
+            />
           </div>
           <div className="relative px-4 [perspective:1000px]">
             <div className="relative aspect-square lg:aspect-auto lg:h-[600px] rounded-3xl overflow-hidden border border-white/10 bg-slate-900/40 backdrop-blur-3xl shadow-3xl transform [rotateY(-5deg)] hover:[rotateY(0deg)] transition-transform duration-1000 ease-out">
@@ -254,38 +242,15 @@ export default function NexShapeFitnessPage() {
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section id="contato" className="space-y-20 pt-10">
-        <div className="text-center space-y-8">
-          <h2 className="text-3xl font-black tracking-tight text-white sm:text-5xl leading-[1.1]">
-            Pronto para o <br/> <span className="text-indigo-500">Próximo Nível?</span>
-          </h2>
-          <p className="mx-auto max-w-2xl text-base text-slate-400">
-            O NexShape conecta alunos, profissionais e clínicas em uma plataforma inteligente para gestão de saúde, performance e evolução corporal.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 pt-6">
-            <Link 
-              href="https://nexshape.com.br" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-2xl bg-indigo-600 px-12 py-5 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-indigo-500 hover:shadow-[0_0_30px_rgba(79,70,229,0.4)] active:scale-95 shadow-2xl shadow-indigo-500/20"
-            >
-              Conhecer o NexShape
-            </Link>
-            <Link 
-              href="https://wa.me/5500000000000" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-3 text-sm font-black uppercase tracking-widest text-white hover:text-indigo-400 transition-all"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 border border-white/10 transition-colors group-hover:bg-indigo-500/20 group-hover:border-indigo-500/50">
-                <span className="transition-transform group-hover:rotate-12">📱</span>
-              </span>
-              WhatsApp <span className="transition-transform group-hover:translate-x-2">→</span>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <ProductFinalCta
+        title="Pronto para o"
+        titleHighlight="Próximo Nível?"
+        highlightClassName="text-indigo-500"
+        description="O NexShape conecta alunos, profissionais e clínicas em uma plataforma inteligente para gestão de saúde, performance e evolução corporal."
+        productSlug="fitness"
+        accent="indigo"
+        systemAccessUrl={systemAccessUrl}
+      />
     </div>
   );
 }

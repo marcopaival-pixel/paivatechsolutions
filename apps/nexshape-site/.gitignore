@@ -13,6 +13,9 @@
 # testing
 /coverage
 .lighthouseci
+/test-results
+/playwright-report
+/blob-report
 
 # next.js
 /.next/
@@ -37,6 +40,10 @@ yarn-error.log*
 .env.local
 .env.*.local
 !.env.example
+
+# local persistence (PII — use Upstash in production)
+db.json
+tmp-cookies.txt
 
 # vercel
 .vercel

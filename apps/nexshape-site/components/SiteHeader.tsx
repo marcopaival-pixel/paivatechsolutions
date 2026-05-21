@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { PRODUCT_DEFINITIONS } from "@/lib/config/products";
 import { PRODUCT_LANDING_PATHS } from "@/lib/config/product-routes";
+import type { ProductCustomization } from "@/lib/db";
 import { PortalBacklink } from "./PortalBacklink";
 import { Suspense, useState, useEffect } from "react";
 import { Logo } from "./Logo";
+import { usePathname } from "next/navigation";
 
 function getProductIcon(slug: string) {
   switch (slug) {
@@ -75,7 +77,22 @@ function getProductBadge(slug: string) {
   }
 }
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  products: ProductCustomization[];
+}
+
+export function SiteHeader({ products }: SiteHeaderProps) {
+  const catalog: ProductCustomization[] =
+    products.length > 0
+      ? products
+      : PRODUCT_DEFINITIONS.map((p) => ({
+          slug: p.slug,
+          apiValue: p.apiValue,
+          navLabel: p.navLabel,
+          title: p.title,
+          short: p.short,
+        }));
+  const pathname = usePathname();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -90,8 +107,12 @@ export function SiteHeader() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   return (
-    <header className="sticky top-4 z-50 mx-auto w-full max-w-5xl px-4">
+    <header className="sticky top-4 z-50 mx-auto w-full max-w-7xl px-4">
       <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] px-6 md:px-8 py-3 transition-all duration-300">
         <div className="mb-1">
           <Suspense fallback={null}>
@@ -140,9 +161,9 @@ export function SiteHeader() {
                 }`}
               >
                 <div className="w-[620px] rounded-3xl border border-white/10 bg-slate-950/95 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-3xl grid grid-cols-2 gap-3">
-                  {PRODUCT_DEFINITIONS.map((p) => {
+                  {catalog.map((p) => {
                     const icon = getProductIcon(p.slug);
-                    const badge = getProductBadge(p.slug);
+                    const fallbackBadge = getProductBadge(p.slug);
                     const href = PRODUCT_LANDING_PATHS[p.slug] || `/produtos/${p.slug}`;
                     
                     return (
@@ -160,11 +181,15 @@ export function SiteHeader() {
                             <span className="text-[11px] font-bold text-white group-hover/item:text-indigo-400 transition-colors uppercase tracking-wider">
                               {p.navLabel}
                             </span>
-                            {badge && (
-                              <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${badge.className}`}>
-                                {badge.text}
+                            {p.badge ? (
+                              <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                {p.badge}
                               </span>
-                            )}
+                            ) : fallbackBadge ? (
+                              <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${fallbackBadge.className}`}>
+                                {fallbackBadge.text}
+                              </span>
+                            ) : null}
                           </div>
                           <p className="text-[10px] leading-normal text-slate-400 font-medium line-clamp-2 group-hover/item:text-slate-300 transition-colors">
                             {p.short}
@@ -221,9 +246,9 @@ export function SiteHeader() {
                 Nossos Produtos
               </span>
               <div className="grid gap-2">
-                {PRODUCT_DEFINITIONS.map((p) => {
+                {catalog.map((p) => {
                   const icon = getProductIcon(p.slug);
-                  const badge = getProductBadge(p.slug);
+                  const fallbackBadge = getProductBadge(p.slug);
                   const href = PRODUCT_LANDING_PATHS[p.slug] || `/produtos/${p.slug}`;
 
                   return (
@@ -241,11 +266,15 @@ export function SiteHeader() {
                           <span className="text-[10px] font-bold text-white uppercase tracking-wider truncate">
                             {p.navLabel}
                           </span>
-                          {badge && (
-                            <span className={`text-[7px] font-black uppercase tracking-widest px-1 py-0.5 rounded-full shrink-0 ${badge.className}`}>
-                              {badge.text}
+                          {p.badge ? (
+                            <span className="text-[7px] font-black uppercase tracking-widest px-1 py-0.5 rounded-full shrink-0 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                              {p.badge}
                             </span>
-                          )}
+                          ) : fallbackBadge ? (
+                            <span className={`text-[7px] font-black uppercase tracking-widest px-1 py-0.5 rounded-full shrink-0 ${fallbackBadge.className}`}>
+                              {fallbackBadge.text}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     </Link>

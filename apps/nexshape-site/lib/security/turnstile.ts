@@ -8,6 +8,14 @@ export function turnstileSiteKey(): string | undefined {
   return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || undefined;
 }
 
+/**
+ * @deprecated Use `isTurnstileEnabled()` no servidor e passe `turnstileEnabled` ao ContactForm.
+ * Só a site key no cliente não garante validação na API.
+ */
+export function hasTurnstileSiteKey(): boolean {
+  return isTurnstileEnabled();
+}
+
 type TurnstileVerifyResponse = {
   success?: boolean;
   "error-codes"?: string[];

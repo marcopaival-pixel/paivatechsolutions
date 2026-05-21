@@ -21,8 +21,11 @@ const MAP: Record<string, ProductInterest> = {
   marketing: "Marketing",
   paivagrowth: "Marketing",
   pg: "Marketing",
-  geral: "Geral",
-  g: "Geral",
+  geral: "Outros",
+  g: "Outros",
+  outros: "Outros",
+  outro: "Outros",
+  o: "Outros",
 };
 
 export function productInterestFromSearchParam(raw: string | undefined): ProductInterest | undefined {

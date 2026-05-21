@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Image from "next/image";
 import { Logo } from "@/components/Logo";
+import { ProductFinalCta } from "@/components/ProductFinalCta";
+import { ProductHeroCtas } from "@/components/ProductHeroCtas";
+import { ProductLandingTopBar } from "@/components/ProductLandingTopBar";
+import { getSystemAccessUrlBySlug } from "@/lib/products/landing-access";
 
 export const metadata: Metadata = {
   title: "PaivaGrowth AI · Automação de Marketing, CRM e Chatbots de Elite",
@@ -9,7 +12,9 @@ export const metadata: Metadata = {
     "Escile suas vendas com CRM Kanban, automações inteligentes de fluxos de trabalho e chatbots de IA com base de conhecimento (RAG).",
 };
 
-export default function PaivaGrowthPage() {
+export default async function PaivaGrowthPage() {
+  const contactHref = "/contato?produto=Marketing";
+  const systemAccessUrl = await getSystemAccessUrlBySlug("marketing");
   const benefits = [
     { 
       title: "CRM Kanban de Vendas", 
@@ -96,24 +101,11 @@ export default function PaivaGrowthPage() {
 
   return (
     <div className="relative isolate space-y-32 pb-20 overflow-hidden">
-      {/* Header Actions */}
-      <div className="fixed top-8 left-8 right-8 z-50 flex justify-between items-center pointer-events-none">
-        <Link 
-          href="/"
-          className="group flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all active:scale-95 pointer-events-auto"
-        >
-          <span className="transition-transform group-hover:-translate-x-1">←</span>
-          Voltar ao Portal
-        </Link>
-
-        <Link 
-          href="/contato?produto=Marketing"
-          className="group flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-purple-500/20 hover:bg-purple-500 transition-all active:scale-95 pointer-events-auto"
-        >
-          Solicitar Demonstração
-          <span className="transition-transform group-hover:translate-x-1">→</span>
-        </Link>
-      </div>
+      <ProductLandingTopBar
+        contactHref={contactHref}
+        systemAccessUrl={systemAccessUrl}
+        accentButtonClass="bg-purple-600 shadow-purple-500/20 hover:bg-purple-500"
+      />
 
       {/* Background decoration with animated blobs */}
       <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
@@ -134,14 +126,11 @@ export default function PaivaGrowthPage() {
             <p className="text-base leading-7 text-slate-400 max-w-xl">
               Automatize campanhas de captação de leads, controle seu funil com CRM Kanban e delegue atendimentos para IAs treinadas com a base de conhecimento do seu negócio.
             </p>
-            <div className="flex flex-wrap gap-6">
-              <Link 
-                href="/contato?produto=Marketing"
-                className="rounded-2xl bg-purple-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-purple-500/40 hover:bg-purple-500 transition-all active:scale-95"
-              >
-                Falar com Consultor
-              </Link>
-            </div>
+            <ProductHeroCtas
+              contactHref={contactHref}
+              systemAccessUrl={systemAccessUrl}
+              primaryButtonClass="rounded-2xl bg-purple-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-purple-500/40 hover:bg-purple-500 transition-all active:scale-95"
+            />
           </div>
           <div className="relative px-4 [perspective:1000px]">
             <div className="relative aspect-square lg:aspect-auto lg:h-[600px] rounded-3xl overflow-hidden border border-white/10 bg-slate-900/40 backdrop-blur-3xl shadow-3xl transform [rotateY(5deg)] hover:[rotateY(0deg)] transition-transform duration-1000 ease-out">
@@ -265,34 +254,15 @@ export default function PaivaGrowthPage() {
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section id="contato" className="space-y-20 pt-10">
-        <div className="text-center space-y-8">
-          <h2 className="text-3xl font-black tracking-tight text-white sm:text-5xl leading-[1.1]">
-            Pronto para impulsionar <br/> <span className="text-purple-500">suas conversões?</span>
-          </h2>
-          <p className="mx-auto max-w-2xl text-base text-slate-400">
-            Simplifique a captação de leads, estruture réguas de relacionamento por canais digitais e aumente a conversão com IA generativa contextual.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 pt-6">
-            <Link 
-              href="/contato?produto=Marketing"
-              className="rounded-2xl bg-purple-600 px-12 py-5 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-purple-500 hover:shadow-[0_0_30px_rgba(147,51,234,0.4)] active:scale-95 shadow-2xl shadow-purple-500/20"
-            >
-              Iniciar Teste Grátis
-            </Link>
-            <Link 
-              href="/contato"
-              className="group flex items-center gap-3 text-sm font-black uppercase tracking-widest text-white hover:text-purple-400 transition-all"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 border border-white/10 transition-colors group-hover:bg-purple-500/20 group-hover:border-purple-500/50">
-                <span className="transition-transform group-hover:rotate-12">✉️</span>
-              </span>
-              Falar Conosco <span className="transition-transform group-hover:translate-x-2">→</span>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <ProductFinalCta
+        title="Pronto para impulsionar"
+        titleHighlight="suas conversões?"
+        highlightClassName="text-purple-500"
+        description="Simplifique a captação de leads, estruture réguas de relacionamento por canais digitais e aumente a conversão com IA generativa contextual."
+        productSlug="marketing"
+        accent="purple"
+        systemAccessUrl={systemAccessUrl}
+      />
     </div>
   );
 }

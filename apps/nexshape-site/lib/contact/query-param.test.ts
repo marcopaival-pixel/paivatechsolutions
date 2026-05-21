@@ -14,6 +14,12 @@ describe("productInterestFromSearchParam", () => {
     expect(productInterestFromSearchParam("zyncora")).toBe("Chat");
   });
 
+  it("maps outros aliases", () => {
+    expect(productInterestFromSearchParam("outros")).toBe("Outros");
+    expect(productInterestFromSearchParam("geral")).toBe("Outros");
+    expect(productInterestFromSearchParam("g")).toBe("Outros");
+  });
+
   it("returns undefined for unknown", () => {
     expect(productInterestFromSearchParam("unknown")).toBeUndefined();
     expect(productInterestFromSearchParam("")).toBeUndefined();

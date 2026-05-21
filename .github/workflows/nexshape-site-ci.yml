@@ -38,6 +38,17 @@ jobs:
       - name: Test
         run: npm run test
 
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: E2E (advisory)
+        run: npm run test:e2e
+        continue-on-error: true
+        env:
+          ADMIN_PASSWORD: admin123
+          LEAD_DISPATCH_MODE: noop_preview
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
       - name: Build
         run: npm run build
         env:

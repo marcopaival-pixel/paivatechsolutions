@@ -3,13 +3,13 @@ import { contactRequestBaseSchema, refineContactPhoneBrazil } from "./schema";
 
 /** Form + resolver: campo “Li a política” vira `consentAccepted` no POST. */
 export const contactFormSchema = contactRequestBaseSchema
-  .omit({ consentAccepted: true })
+  .omit({ consentAccepted: true, website: true })
   .extend({
     consentPolicy: z.boolean().refine((val) => val === true, {
       message: "É necessário aceitar a política de privacidade.",
     }),
-    /** Resolver + RHF: input explícito (evita opcional pelo `.default` do schema da API). */
-    website: z.string(),
+    /** Honeypot no formulário (nome neutro — evita autofill em campo "website"). */
+    botCheck: z.string(),
   })
   .superRefine((data, ctx) => refineContactPhoneBrazil(data, ctx));
 
@@ -27,7 +27,7 @@ export function buildContactApiBody(
     companyName: values.companyName,
     productInterest: values.productInterest,
     message: values.message,
-    website: values.website,
+    website: values.botCheck,
     ...(values.sourcePath?.trim() ? { sourcePath: values.sourcePath.trim() } : {}),
     ...(cfTurnstileToken ? { cfTurnstileToken } : {}),
     consentAccepted: true as const,

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { ProductFinalCta } from "@/components/ProductFinalCta";
+import { ProductHeroCtas } from "@/components/ProductHeroCtas";
+import { ProductLandingTopBar } from "@/components/ProductLandingTopBar";
+import { getSystemAccessUrlBySlug } from "@/lib/products/landing-access";
 
 export const metadata: Metadata = {
   title: "PaivaTech Commerce · Gestão Comercial de Elite e PDV",
@@ -8,7 +11,9 @@ export const metadata: Metadata = {
     "Sistema completo de gestão comercial e de vendas multi-tenant para restaurantes, cafeterias e comércio em geral, com PDV frente de caixa, KDS e comandas eletrônicas.",
 };
 
-export default function PaivaTechCommercePage() {
+export default async function PaivaTechCommercePage() {
+  const contactHref = "/contato?produto=commerce";
+  const systemAccessUrl = await getSystemAccessUrlBySlug("commerce");
   const benefits = [
     { title: "Arquitetura Multi-Tenant", description: "Isolamento total de dados por banco de dados SQLite para cada restaurante/estabelecimento comercial.", icon: "🏢" },
     { title: "PDV Frente de Caixa Rápido", description: "Interface de vendas ultra rápida com split de pagamento (PIX, Cartão, Dinheiro) e emissão simulada de NFC-e.", icon: "💻" },
@@ -65,25 +70,11 @@ export default function PaivaTechCommercePage() {
   return (
     <div className="relative isolate space-y-32 pb-20 overflow-hidden">
       {/* Header Actions */}
-      <div className="fixed top-8 left-8 right-8 z-50 flex justify-between items-center pointer-events-none">
-        <Link 
-          href="/"
-          className="group flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all active:scale-95 pointer-events-auto"
-        >
-          <span className="transition-transform group-hover:-translate-x-1">←</span>
-          Voltar ao Portal
-        </Link>
-
-        <Link 
-          href="http://localhost:8000"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center gap-2 rounded-full bg-amber-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-amber-500/20 hover:bg-amber-500 transition-all active:scale-95 pointer-events-auto"
-        >
-          Acessar Landlord
-          <span className="transition-transform group-hover:translate-x-1">→</span>
-        </Link>
-      </div>
+      <ProductLandingTopBar
+        contactHref={contactHref}
+        systemAccessUrl={systemAccessUrl}
+        accentButtonClass="bg-amber-600 shadow-amber-500/20 hover:bg-amber-500"
+      />
 
       {/* Background decoration with animated blobs */}
       <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
@@ -104,14 +95,11 @@ export default function PaivaTechCommercePage() {
             <p className="text-base leading-7 text-slate-400 max-w-xl">
               A plataforma definitiva para restaurantes, bares, cafeterias e comércio em geral. Ofereça controle de salão, comandas eletrônicas, frente de caixa rápido com split de pagamento e monitor KDS, tudo sob uma arquitetura multi-tenant isolada e segura.
             </p>
-            <div className="flex flex-wrap gap-6">
-              <Link 
-                href="/contato?produto=commerce" 
-                className="rounded-2xl bg-amber-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-amber-500/40 hover:bg-amber-500 transition-all active:scale-95"
-              >
-                Solicitar Demonstração
-              </Link>
-            </div>
+            <ProductHeroCtas
+              contactHref={contactHref}
+              systemAccessUrl={systemAccessUrl}
+              primaryButtonClass="rounded-2xl bg-amber-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-amber-500/40 hover:bg-amber-500 transition-all active:scale-95"
+            />
           </div>
           <div className="relative px-4 [perspective:1000px]">
             <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-900/40 backdrop-blur-3xl shadow-3xl transform [rotateY(-5deg)] hover:[rotateY(0deg)] transition-transform duration-1000 ease-out flex items-center justify-center p-8">
@@ -250,25 +238,15 @@ export default function PaivaTechCommercePage() {
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section id="contato" className="space-y-20 pt-10">
-        <div className="text-center space-y-8">
-          <h2 className="text-3xl font-black tracking-tight text-white sm:text-5xl leading-[1.1]">
-            Pronto para impulsionar <br/> <span className="text-amber-500">suas vendas?</span>
-          </h2>
-          <p className="mx-auto max-w-2xl text-base text-slate-400">
-            Experimente o PaivaTech Commerce e conte com automação de PDV, gerenciamento de salão completo por mesa e controle integrado de KDS para cozinha em tempo real.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 pt-6">
-            <Link 
-              href="/contato?produto=commerce" 
-              className="rounded-2xl bg-amber-600 px-12 py-5 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-amber-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] active:scale-95 shadow-2xl shadow-amber-500/20"
-            >
-              Falar com Comercial
-            </Link>
-          </div>
-        </div>
-      </section>
+      <ProductFinalCta
+        title="Pronto para impulsionar"
+        titleHighlight="suas vendas?"
+        highlightClassName="text-amber-500"
+        description="Experimente o PaivaTech Commerce com automação de PDV, gestão por mesa e controle integrado de KDS para cozinha em tempo real."
+        productSlug="commerce"
+        accent="amber"
+        systemAccessUrl={systemAccessUrl}
+      />
     </div>
   );
 }

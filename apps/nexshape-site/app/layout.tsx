@@ -3,7 +3,11 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { getProductsDynamic } from "@/lib/db";
 import { siteUrl } from "@/lib/site";
+import { SITE_DESCRIPTION } from "@/lib/site/branding";
+
+import { headers } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,24 +17,34 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "PaivaTech Solutions · Suite NexShape",
-    template: "%s · NexShape",
+    default: "PaivaTech Solutions",
+    template: "%s · PaivaTech",
   },
-  description:
-    "PaivaTech Solutions apresenta a suite NexShape: Saúde & Performance, OralByte, Chat e Credit.",
+  description: SITE_DESCRIPTION,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isAdmin = pathname.startsWith("/admin");
+  const products = isAdmin ? [] : await getProductsDynamic();
+
   return (
     <html lang="pt-BR" className="dark" style={{ colorScheme: 'dark' }}>
       <body className={`${geistSans.variable} font-sans antialiased`}>
-        <SiteHeader />
-        <main className="mx-auto max-w-5xl px-4 py-16 sm:py-24">{children}</main>
-        <SiteFooter />
+        {isAdmin ? (
+          children
+        ) : (
+          <>
+            <SiteHeader products={products} />
+            <main className="mx-auto max-w-7xl px-4 py-16 sm:py-24">{children}</main>
+            <SiteFooter products={products} />
+          </>
+        )}
       </body>
     </html>
   );

@@ -3,32 +3,43 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { TurnstileField } from "@/components/TurnstileField";
+import { ProductInterestSelect } from "@/components/ProductInterestSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   contactFormSchema,
   type ContactFormValues,
   buildContactApiBody,
 } from "@/lib/contact/form-schema";
-import { productInterestEnum, type ProductInterest } from "@/lib/contact/schema";
-import { PRODUCT_DEFINITIONS } from "@/lib/config/products";
+import type { ProductInterest } from "@/lib/contact/schema";
+import type { ProductInterestOption } from "@/lib/contact/product-interest-options";
 import { PRIVACY_POLICY_VERSION } from "@/lib/legal";
 
-const PRODUCT_OPTIONS = productInterestEnum.options;
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
+const inputClassName =
+  "w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder:text-slate-600 ring-indigo-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40";
 
 interface ContactFormProps {
   defaultProduct?: ProductInterest;
+  productOptions: ProductInterestOption[];
+  /** Alinhado com `isTurnstileEnabled()` no servidor (ambas as chaves Turnstile). */
+  turnstileEnabled?: boolean;
+  turnstileSiteKey?: string;
 }
 
-export function ContactForm({ defaultProduct }: ContactFormProps) {
+export function ContactForm({
+  defaultProduct,
+  productOptions,
+  turnstileEnabled = false,
+  turnstileSiteKey,
+}: ContactFormProps) {
   const router = useRouter();
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const captchaRequired = Boolean(TURNSTILE_SITE_KEY);
+  const captchaRequired = turnstileEnabled && Boolean(turnstileSiteKey);
   const {
     register,
     handleSubmit,
+    control,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<ContactFormValues>({
@@ -40,7 +51,7 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
       companyName: "",
       productInterest: defaultProduct,
       message: "",
-      website: "",
+      botCheck: "",
       consentPolicy: false,
       sourcePath: "",
     },
@@ -75,43 +86,124 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
         return;
       }
 
+      if (res.status === 400 && data.error === "captcha_required") {
+        setError("root.server", {
+          message:
+            typeof data.message === "string"
+              ? data.message
+              : "Confirme o desafio de segurança (CAPTCHA) antes de enviar.",
+        });
+        return;
+      }
+
       if (res.status === 400 && data.error === "captcha_failed") {
         setTurnstileToken(null);
-        setError("root.server", { message: "Verificação de segurança falhou. Tente novamente." });
+        setError("root.server", {
+          message:
+            typeof data.message === "string"
+              ? data.message
+              : "Verificação de segurança falhou. Tente novamente.",
+        });
+        return;
+      }
+
+      if (res.status === 400 && data.error === "invalid_json") {
+        setError("root.server", { message: "Não foi possível ler os dados do formulário. Recarregue a página e tente de novo." });
+        return;
+      }
+
+      if (res.status === 400 && data.error === "honeypot") {
+        setError("root.server", {
+          message: "Envio bloqueado por segurança. Desative preenchimento automático nesta página e tente novamente.",
+        });
+        return;
+      }
+
+      if (res.status === 503 && data.error === "storage_unavailable") {
+        setError("root.server", {
+          message:
+            typeof data.message === "string"
+              ? data.message
+              : "Serviço temporariamente indisponível. Tente mais tarde ou use o WhatsApp.",
+        });
+        return;
+      }
+
+      if (res.status === 502 || data.error === "server_error") {
+        setError("root.server", {
+          message:
+            typeof data.message === "string"
+              ? data.message
+              : "Não foi possível registrar o contato. Tente novamente em instantes.",
+        });
         return;
       }
 
       if (res.status === 422 && Array.isArray(data.issues)) {
-        const issues = data.issues as Array<{ path?: string; messagePt?: string }>;
+        const issues = data.issues as Array<{ path?: string; messagePt?: string; message?: string }>;
+        let hasFieldError = false;
         for (const issue of issues) {
-          const path = issue.path;
-          if (!path) continue;
+          const path = issue.path?.trim();
+          const msg = issue.messagePt || issue.message || "Campo inválido.";
 
-          // Map API field 'consentAccepted' to form field 'consentPolicy'
-          if (path === "consentAccepted") {
-            setError("consentPolicy", { message: issue.messagePt || "Aceite a política de privacidade." });
+          if (!path) {
+            setError("root.server", { message: msg });
+            hasFieldError = true;
             continue;
           }
 
-          // Safe cast and check if path exists in form values
+          if (path === "consentAccepted") {
+            setError("consentPolicy", { message: msg || "Aceite a política de privacidade." });
+            hasFieldError = true;
+            continue;
+          }
+
           const fieldName = path as keyof ContactFormValues;
-          setError(fieldName, { message: issue.messagePt || "Campo inválido." });
+          setError(fieldName, { message: msg });
+          hasFieldError = true;
+        }
+        if (!hasFieldError) {
+          setError("root.server", { message: "Verifique os campos e tente novamente." });
         }
         return;
       }
 
-      setError("root.server", { message: "Não foi possível enviar. Tente novamente em instantes." });
+      setError("root.server", {
+        message:
+          typeof data.message === "string"
+            ? data.message
+            : "Não foi possível enviar. Tente novamente em instantes.",
+      });
     } catch {
       setError("root.server", { message: "Erro de rede. Tente novamente." });
     }
   }
 
   return (
-    <div className="glass-card overflow-hidden rounded-[2.5rem] p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 sm:p-14">
-      <form className="relative space-y-10" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div className="absolute -left-[9999px] h-px w-px overflow-hidden opacity-0" aria-hidden tabIndex={-1}>
-          <label htmlFor="trap-website">Website</label>
-          <input id="trap-website" type="text" tabIndex={-1} autoComplete="off" {...register("website")} />
+    <div className="glass-card rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 sm:p-10">
+      <div className="mb-8 space-y-2 border-b border-white/5 pb-8">
+        <h2 className="text-2xl font-black tracking-tight text-white">Solicitar contato</h2>
+        <p className="text-sm leading-relaxed text-slate-400">
+          Campos com <span className="text-indigo-400">*</span> são obrigatórios. Seus dados são tratados conforme a{" "}
+          <Link href="/privacidade" className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+            Política de Privacidade
+          </Link>
+          .
+        </p>
+      </div>
+
+      <form className="relative space-y-8" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <div className="absolute -left-[9999px] h-px w-px overflow-hidden opacity-0" aria-hidden>
+          <label htmlFor="contact-bot-check">Deixe em branco</label>
+          <input
+            id="contact-bot-check"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            readOnly
+            {...register("botCheck")}
+            onFocus={(e) => e.currentTarget.blur()}
+          />
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2">
@@ -123,7 +215,7 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
               id="fullName"
               autoComplete="name"
               placeholder="Ex: João Silva"
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder:text-slate-600 ring-indigo-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              className={inputClassName}
               {...register("fullName")}
               aria-invalid={errors.fullName ? true : undefined}
               aria-describedby={errors.fullName ? "fullName-err" : undefined}
@@ -144,7 +236,7 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
               type="email"
               autoComplete="email"
               placeholder="joao@empresa.com"
-              className="w-full rounded-xl border border-slate-200 bg-white/50 px-4 py-3 text-slate-900 ring-indigo-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white"
+              className={inputClassName}
               {...register("email")}
               aria-invalid={errors.email ? true : undefined}
               aria-describedby={errors.email ? "email-err" : undefined}
@@ -165,7 +257,7 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
               type="tel"
               autoComplete="tel"
               placeholder="(99) 99999-9999"
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder:text-slate-600 ring-indigo-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              className={inputClassName}
               {...register("phone", {
                 onChange: (e) => {
                   let v = e.target.value.replace(/\D/g, "");
@@ -200,7 +292,7 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
               id="companyName"
               autoComplete="organization"
               placeholder="Nome da sua empresa"
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder:text-slate-600 ring-indigo-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              className={inputClassName}
               {...register("companyName")}
               aria-invalid={errors.companyName ? true : undefined}
               aria-describedby={errors.companyName ? "companyName-err" : undefined}
@@ -214,29 +306,27 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
 
           <div className="sm:col-span-2 space-y-2">
             <label htmlFor="productInterest" className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-              Solução de interesse <span className="text-indigo-600">*</span>
+              Sistema de interesse <span className="text-indigo-600">*</span>
             </label>
-            <select
-              id="productInterest"
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder:text-slate-600 ring-indigo-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-              {...register("productInterest")}
-              aria-invalid={errors.productInterest ? true : undefined}
-              aria-describedby={errors.productInterest ? "prod-err" : undefined}
-            >
-              <option value="" disabled>
-                Selecione uma vertical
-              </option>
-              {PRODUCT_OPTIONS.map((opt) => {
-                const label =
-                  PRODUCT_DEFINITIONS.find((p) => p.apiValue === opt)?.title ||
-                  (opt === "Geral" ? "Geral / outro" : opt);
-                return (
-                  <option key={opt} value={opt}>
-                    {label}
-                  </option>
-                );
-              })}
-            </select>
+            <Controller
+              name="productInterest"
+              control={control}
+              render={({ field }) => (
+                <ProductInterestSelect
+                  id="productInterest"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={Boolean(errors.productInterest)}
+                  describedBy={errors.productInterest ? "prod-err prod-hint" : "prod-hint"}
+                  options={productOptions}
+                />
+              )}
+            />
+            <p id="prod-hint" className="text-xs text-slate-500">
+              Todos os produtos PaivaTech estão listados. Se o assunto não for um sistema específico, escolha{" "}
+              <strong className="text-slate-400">Outros</strong>.
+            </p>
             {errors.productInterest && (
               <p id="prod-err" className="text-xs font-medium text-red-500" role="alert">
                 {errors.productInterest.message}
@@ -252,8 +342,8 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
           <textarea
             id="message"
             rows={4}
-            placeholder="Descreva seu desafio operacional..."
-            className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder:text-slate-600 ring-indigo-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+            placeholder="Ex.: volume de atendimentos, equipe atual, integrações necessárias..."
+            className={`${inputClassName} min-h-[120px] resize-y`}
             {...register("message")}
             aria-invalid={errors.message ? true : undefined}
             aria-describedby={errors.message ? "message-err" : undefined}
@@ -281,9 +371,9 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
           </p>
         )}
 
-        {TURNSTILE_SITE_KEY && (
+        {captchaRequired && turnstileSiteKey && (
           <TurnstileField
-            siteKey={TURNSTILE_SITE_KEY}
+            siteKey={turnstileSiteKey}
             onToken={(token) => setTurnstileToken(token)}
             onExpire={() => setTurnstileToken(null)}
             onError={() => setTurnstileToken(null)}
@@ -305,7 +395,7 @@ export function ContactForm({ defaultProduct }: ContactFormProps) {
             "Enviando solicitação..."
           ) : (
             <>
-              Enviar solicitação
+              Enviar mensagem
               <span className="transition-transform group-hover:translate-x-2">→</span>
             </>
           )}

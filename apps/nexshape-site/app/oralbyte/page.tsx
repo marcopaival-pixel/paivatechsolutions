@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Image from "next/image";
 import { Logo } from "@/components/Logo";
+import { ProductFinalCta } from "@/components/ProductFinalCta";
+import { ProductHeroCtas } from "@/components/ProductHeroCtas";
+import { ProductLandingTopBar } from "@/components/ProductLandingTopBar";
+import { getSystemAccessUrlBySlug } from "@/lib/products/landing-access";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "OralByte · Gestão Premium para Clínicas & Harmonização Orofacial (HOF)",
@@ -9,7 +14,9 @@ export const metadata: Metadata = {
     "Organize a recepção, agenda multi-profissional, prontuário clínico e procedimentos estéticos/HOF com inteligência e controle total de insumos.",
 };
 
-export default function OralBytePage() {
+export default async function OralBytePage() {
+  const contactHref = "/contato?produto=oralbyte";
+  const systemAccessUrl = await getSystemAccessUrlBySlug("dental");
   const benefits = [
     {
       title: "Gestão Multiclínica (SaaS)",
@@ -119,24 +126,11 @@ export default function OralBytePage() {
 
   return (
     <div className="relative isolate space-y-32 pb-20 overflow-hidden">
-      {/* Header Actions */}
-      <div className="fixed top-8 left-8 right-8 z-50 flex justify-between items-center pointer-events-none">
-        <Link
-          href="/"
-          className="group flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all active:scale-95 pointer-events-auto"
-        >
-          <span className="transition-transform group-hover:-translate-x-1">←</span>
-          Voltar ao Portal
-        </Link>
-
-        <Link
-          href="/contato?produto=oralbyte"
-          className="group flex items-center gap-2 rounded-full bg-teal-600 px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-teal-500/20 hover:bg-teal-500 transition-all active:scale-95 pointer-events-auto"
-        >
-          Solicitar Demonstração
-          <span className="transition-transform group-hover:translate-x-1">→</span>
-        </Link>
-      </div>
+      <ProductLandingTopBar
+        contactHref={contactHref}
+        systemAccessUrl={systemAccessUrl}
+        accentButtonClass="bg-teal-600 shadow-teal-500/20 hover:bg-teal-500"
+      />
 
       {/* Background decoration with animated blobs */}
       <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
@@ -157,14 +151,12 @@ export default function OralBytePage() {
             <p className="text-base leading-7 text-slate-400 max-w-xl">
               Uma plataforma SaaS moderna para simplificar o Onboarding de pacientes, organizar a agenda de especialistas e otimizar procedimentos clínicos e de estética facial com controle rigoroso de insumos, termos jurídicos e faturamento.
             </p>
-            <div className="flex flex-wrap gap-6">
-              <Link
-                href="/contato?produto=oralbyte"
-                className="rounded-2xl bg-teal-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-teal-500/40 hover:bg-teal-500 transition-all active:scale-95"
-              >
-                Solicitar Licença
-              </Link>
-            </div>
+            <ProductHeroCtas
+              contactHref={contactHref}
+              systemAccessUrl={systemAccessUrl}
+              primaryButtonClass="rounded-2xl bg-teal-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-teal-500/40 hover:bg-teal-500 transition-all active:scale-95"
+              hideDemoButton
+            />
           </div>
           <div className="relative px-4 [perspective:1000px]">
             <div className="relative aspect-square lg:aspect-auto lg:h-[600px] rounded-3xl overflow-hidden border border-white/10 bg-slate-900/40 backdrop-blur-3xl shadow-3xl transform [rotateY(-5deg)] hover:[rotateY(0deg)] transition-transform duration-1000 ease-out">
@@ -304,36 +296,15 @@ export default function OralBytePage() {
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section id="contato" className="space-y-20 pt-10">
-        <div className="text-center space-y-8">
-          <h2 className="text-3xl font-black tracking-tight text-white sm:text-5xl leading-[1.1]">
-            Eleve o Nível da sua <br /> <span className="text-teal-500">Gestão Clínica.</span>
-          </h2>
-          <p className="mx-auto max-w-2xl text-base text-slate-400">
-            A integração perfeita de recepção, agenda odontológica e Harmonização Orofacial em um ambiente seguro, ágil e em total conformidade.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 pt-6">
-            <Link
-              href="/contato?produto=oralbyte"
-              className="rounded-2xl bg-teal-600 px-12 py-5 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-teal-500 hover:shadow-[0_0_30px_rgba(20,184,166,0.4)] active:scale-95 shadow-2xl shadow-teal-500/20"
-            >
-              Falar com um Consultor
-            </Link>
-            <Link
-              href="https://wa.me/5500000000000"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-3 text-sm font-black uppercase tracking-widest text-white hover:text-teal-400 transition-all"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 border border-white/10 transition-colors group-hover:bg-teal-500/20 group-hover:border-teal-500/50">
-                <span className="transition-transform group-hover:rotate-12">📱</span>
-              </span>
-              WhatsApp <span className="transition-transform group-hover:translate-x-2">→</span>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <ProductFinalCta
+        title="Eleve o nível da sua"
+        titleHighlight="Gestão Clínica."
+        highlightClassName="text-teal-500"
+        description="A integração perfeita de recepção, agenda odontológica e harmonização orofacial em um ambiente seguro, ágil e em total conformidade."
+        productSlug="dental"
+        accent="teal"
+        systemAccessUrl={systemAccessUrl}
+      />
     </div>
   );
 }

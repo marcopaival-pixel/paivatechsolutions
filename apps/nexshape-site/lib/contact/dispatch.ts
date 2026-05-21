@@ -24,6 +24,8 @@ export async function dispatchLead(data: ContactRequest): Promise<void> {
     if (!url) {
       throw new Error("CRM_WEBHOOK_URL missing for webhook mode");
     }
+    const { assertCrmWebhookUrlAllowed } = await import("./crm-webhook");
+    assertCrmWebhookUrlAllowed(url);
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     const key = process.env.CRM_API_KEY?.trim();
     if (key) headers.Authorization = `Bearer ${key}`;

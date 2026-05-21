@@ -23,6 +23,11 @@ describe("contactRequestSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts Outros as product interest", () => {
+    const result = contactRequestSchema.safeParse({ ...validPayload, productInterest: "Outros" });
+    expect(result.success).toBe(true);
+  });
+
   it("rejects invalid phone", () => {
     const result = contactRequestSchema.safeParse({ ...validPayload, phone: "123" });
     expect(result.success).toBe(false);
@@ -31,5 +36,13 @@ describe("contactRequestSchema", () => {
   it("rejects missing consent", () => {
     const result = contactRequestSchema.safeParse({ ...validPayload, consentAccepted: false });
     expect(result.success).toBe(false);
+  });
+
+  it("accepts optional cfTurnstileToken", () => {
+    const result = contactRequestSchema.safeParse({
+      ...validPayload,
+      cfTurnstileToken: "token-from-widget",
+    });
+    expect(result.success).toBe(true);
   });
 });

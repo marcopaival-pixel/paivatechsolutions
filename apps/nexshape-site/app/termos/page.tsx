@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Termos de Uso · PaivaTech Solutions",
-  description: "Diretrizes e termos de uso do ecossistema institucional PaivaTech Solutions / NexShape.",
+  description: "Diretrizes e termos de uso do ecossistema institucional PaivaTech Solutions.",
 };
 
 export default function TermosPage() {
@@ -46,7 +46,10 @@ export default function TermosPage() {
               Conteúdo e Roadmap
             </h2>
             <p className="text-slate-400 leading-relaxed">
-              As descrições dos produtos (NexShape Saúde & Performance, OralByte, Zyncora, Credit) têm caráter meramente informativo e podem sofrer alterações sem aviso prévio, conforme o roadmap técnico e requisitos de mercado. Os materiais visuais e mockups não constituem garantia de interface final ou disponibilidade de módulos específicos.
+              As descrições dos produtos do ecossistema PaivaTech (NexShape Saúde & Performance, OralByte, Zyncora,
+              ConsultaTech, KanbaPaiva, PaivaTech Commerce e PaivaGrowth AI) têm caráter meramente informativo e podem
+              sofrer alterações sem aviso prévio, conforme o roadmap técnico e requisitos de mercado. Os materiais
+              visuais e mockups não constituem garantia de interface final ou disponibilidade de módulos específicos.
             </p>
           </section>
 

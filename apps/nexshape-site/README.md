@@ -1,6 +1,6 @@
-# NexShape Site (PaivaTech Solutions)
+# PaivaTech Site
 
-Site institucional da Suite NexShape — Next.js 15 App Router, captura de leads via `POST /api/contact`.
+Site institucional do ecossistema **PaivaTech** — Next.js 15 App Router, captura de leads via `POST /api/contact`.
 
 ## Requisitos
 
@@ -17,6 +17,8 @@ npm run dev
 
 Abra [http://localhost:3000](http://localhost:3000).
 
+Guia de teste local (hosts, processos, checklist): [../../docto/TESTE_LOCAL.md](../../docto/TESTE_LOCAL.md).
+
 ## Scripts
 
 | Comando | Descrição |
@@ -25,7 +27,8 @@ Abra [http://localhost:3000](http://localhost:3000).
 | `npm run build` | Build de produção |
 | `npm run start` | Servidor após build |
 | `npm run lint` | ESLint |
-| `npm run test` | Vitest (schemas, rate limit) |
+| `npm run test` | Vitest (unitários) |
+| `npm run test:e2e` | Playwright (E2E, porta 3099) |
 
 ## Variáveis de ambiente
 

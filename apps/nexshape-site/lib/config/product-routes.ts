@@ -9,4 +9,15 @@ export const PRODUCT_LANDING_PATHS: Record<string, string> = {
   marketing: "/paivagrowth",
 };
 
+/** Query `?produto=` nas landings → formulário de contato. */
+export const CONTACT_PRODUCT_QUERY: Record<string, string> = {
+  fitness: "fitness",
+  dental: "oralbyte",
+  chat: "zyncora",
+  credit: "credit",
+  kanban: "kanban",
+  commerce: "commerce",
+  marketing: "marketing",
+};
+
 export const PRODUCT_LANDING_URLS = Object.values(PRODUCT_LANDING_PATHS);
