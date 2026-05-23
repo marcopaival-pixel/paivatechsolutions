@@ -610,7 +610,7 @@ Rate limit, Next 15.5.18, security headers, sitemap 7 landings, Turnstile, Vites
 | Turnstile (ambas chaves) antes ads pagos | ⬜ | |
 | Rotas `/acessar` 7 produtos | ✅ | 22/05/2026 |
 | `db.json` fora do Git | ✅ | 22/05/2026 |
-| Git push remoto + Vercel | ⬜ | |
+| Git push remoto + Vercel | ⬜ push ✅ / Vercel pendente | 23/05/2026 |
 | Domínio + SSL | ⬜ | |
 | Monitoramento uptime | ⬜ | |
 | Revisão jurídica | ⬜ | |
@@ -638,7 +638,7 @@ Rate limit, Next 15.5.18, security headers, sitemap 7 landings, Turnstile, Vites
 | P0-01 | **Upstash Redis** | Criar database Upstash; configurar `UPSTASH_REDIS_REST_URL` e `TOKEN` na Vercel Production | Crítico | 1h | DevOps | ⬜ | `GET /api/health` → `storage.mode: "redis"` |
 | P0-02 | **CRM webhook** | `LEAD_DISPATCH_MODE=webhook`, `CRM_WEBHOOK_URL`, `CRM_API_KEY` se necessário | Crítico | 2h | DevOps + Comercial | ⬜ | Formulário QA aparece no CRM em < 2 min |
 | P0-03 | **Secrets admin** | `ADMIN_PASSWORD` forte (≠ admin123), `SESSION_SECRET` aleatório 32+ chars | Crítico | 30 min | DevOps | ⬜ | Login admin OK; misconfig retorna 503 se senha fraca |
-| P0-04 | **GitHub + Vercel** | Push remoto; projeto Vercel root `apps/nexshape-site`; CI verde | Alto | 2h | DevOps | ⬜ | PR/push dispara workflow verde |
+| P0-04 | **GitHub + Vercel** | Push remoto; projeto Vercel root `apps/nexshape-site`; CI verde | Alto | 2h | DevOps | ⬜ parcial | Push OK 23/05/2026; import Vercel pendente |
 | P0-05 | **Domínio + SSL** | DNS → Vercel; `NEXT_PUBLIC_SITE_URL` = domínio final; redeploy | Alto | 2h | DevOps | ⬜ | HTTPS 200 em `/`, sitemap, robots |
 | P0-06 | **Smoke pós-deploy** | Checklist: home, contato, admin, health, lead CRM | Alto | 1h | QA | ⬜ | Documento smoke assinado |
 
@@ -731,7 +731,7 @@ flowchart LR
 | P0-01 | | | |
 | P0-02 | | | |
 | P0-03 | | | |
-| P0-04 | | | |
+| P0-04 | 23/05/2026 | Agent | push → [paivatechsolutions](https://github.com/marcopaival-pixel/paivatechsolutions) `65468a7` |
 | P0-05 | | | |
 | P0-06 | | | |
 | P1-01 | 21/05/2026 | Agent | `.gitignore` |
