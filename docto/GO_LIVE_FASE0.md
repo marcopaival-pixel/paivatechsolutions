@@ -13,7 +13,7 @@ Guia executável para colocar o **nexshape-site** em produção. O código e os 
 | 7 | Smoke test | 15 min | [§ 7](#7-smoke-test-obrigatório) |
 | 8 | Monitoramento | 10 min | [§ 8](#8-monitoramento) |
 
-Relatório técnico completo: [Auditoria_Relatorio.md](./Auditoria_Relatorio.md) (v2.2).
+Relatório técnico completo: [Auditoria_Relatorio.md](./Auditoria_Relatorio.md) (v3.0).
 
 ---
 

@@ -2,15 +2,15 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Versão do relatório** | 2.2 |
-| **Data da auditoria** | 21/05/2026 |
-| **Última atualização** | 21/05/2026 (Fase 1–2 do plano: `/acessar`, Turnstile, secrets, rate limit admin, testes 51) |
+| **Versão do relatório** | 3.0 |
+| **Data da auditoria** | 22/05/2026 |
+| **Última atualização** | 22/05/2026 (reauditoria 360°, API settings/Portal Central, preflight OK, 62 testes) |
 | **Escopo** | `c:\Projetos\PaivatechSolutions` (workspace completo) |
 | **Aplicação em produção** | `apps/nexshape-site` |
 | **Ferramenta de especificação** | `Fabrica/` |
 | **Template de referência** | `docto/Auditoria_Completa.txt` |
 | **Auditor** | Cursor Agent (auditoria automatizada + revisão de código) |
-| **Testes na auditoria** | 11 arquivos Vitest, **39 casos** — todos passando |
+| **Testes na auditoria** | 16 arquivos Vitest **62 casos** + Playwright E2E — todos passando; preflight go-live OK |
 
 > **Documento vivo:** atualize este arquivo quando um item do plano for concluído, um risco for mitigado ou o escopo mudar. Registrar em [Histórico de atualizações](#histórico-de-atualizações).
 
@@ -25,6 +25,7 @@
 | 21/05/2026 | **2.1** | Implementação plano: 7 rotas `/acessar`, `db.json` gitignore, Turnstile alinhado, `SESSION_SECRET` obrigatório prod, timing-safe, rate limit admin API, middleware explícito, 51 testes |
 | 21/05/2026 | **2.2** | Fase 3: CSRF admin, CRM allowlist, Playwright E2E, CSP prod, 62 testes Vitest |
 | 21/05/2026 | **2.2** | **GO_LIVE_FASE0.md** + `scripts/smoke-prod.ps1` — runbook operacional Fase 0 |
+| 22/05/2026 | **3.0** | Reauditoria 360°: consolidação CSRF/allowlist/7×`/acessar`, API `/admin/api/settings` (Portal Central), preflight OK, notas recalculadas |
 
 ---
 
@@ -94,7 +95,7 @@ PaivatechSolutions/
 | `zod`, `react-hook-form` | Validação formulário/API |
 | `@upstash/ratelimit`, `@upstash/redis` | Rate limit + storage distribuído |
 | `@marsidev/react-turnstile` | CAPTCHA opcional |
-| `vitest` | Testes unitários (39 casos) |
+| `vitest` | Testes unitários (62 casos) + Playwright E2E |
 
 ### Serviços externos
 
@@ -128,7 +129,7 @@ Fitness, OralByte, Zyncora, ConsultaTech, KanbaPaiva, Commerce e PaivaGrowth exi
 | 7 landings | `/nexshape-fitness` … `/paivagrowth` | `app/*/page.tsx` | Textos via DB merge | Completo | Copy financeira |
 | Produto legado | `/produtos/[slug]` | `app/produtos/[slug]/page.tsx` | DB | Completo | 301 → landing |
 | SEO | `/sitemap.xml`, `/robots.txt` | `sitemap.ts`, `robots.ts` | — | Completo | URLs legado no sitemap |
-| Acesso ao sistema | `/{landing}/acessar` | Só `nexshape-fitness/acessar` | Admin hosts | **Parcial** | 6 produtos sem handler |
+| Acesso ao sistema | `/{landing}/acessar` (×7) | `app/*/acessar/route.ts` | Admin hosts | ✅ Completo | Host mal configurado → redirect errado |
 
 ### Módulo: API pública
 
@@ -145,6 +146,7 @@ Fitness, OralByte, Zyncora, ConsultaTech, KanbaPaiva, Commerce e PaivaGrowth exi
 | Leads (CRM interno) | `/admin` | `GET/PUT/DELETE /admin/api/leads` | Completo | PII; sem audit log |
 | Produtos (textos + URLs) | `/admin/produtos` | `GET/PUT /admin/api/products` | Completo | Sessão vazada = alto impacto |
 | WhatsApp site | `/admin/contato` | `GET/PUT /admin/api/contact` | Completo | — |
+| Portal Central | `/admin/produtos` (sidebar) | `GET/PUT /admin/api/settings` | Completo | Validação URL mais fraca que contact API |
 | Export CSV | Dashboard | — | Completo | Download PII |
 
 ### Módulo: Fabrica
@@ -184,18 +186,20 @@ Auth de usuários finais, RBAC, multi-tenant, vendas, estoque, financeiro, gatew
 | `/admin/api/logout` | POST | Sim | Protegido | Baixo |
 | `/admin/api/leads` | GET/PUT/DELETE | Sim | 401 JSON | Alto se sessão roubada |
 | `/admin/api/products` | GET/PUT | Sim | Idem | Médio |
-| `/admin/api/contact` | GET/PUT | Sim | Idem | Baixo |
-| `/nexshape-fitness/acessar` | GET | Não | Redirect 302 allowlist | Baixo |
+| `/admin/api/contact` | GET/PUT | Sim | CSRF + 60/min | Baixo |
+| `/admin/api/settings` | GET/PUT | Sim | CSRF + 60/min | Médio (validação fraca) |
+| `/{landing}/acessar` (×7) | GET | Não | Redirect 302 allowlist | Baixo |
 
 ### Achados
 
-| Tipo | Achado |
-|------|--------|
-| Admin protegido | Sim — `middleware.ts` + cookie HMAC |
-| Duplicadas | `/produtos/{slug}` vs landing (301 intencional) |
-| Debug expostas | Nenhuma |
-| **Gap** | `getProductAccessRedirectPath()` prevê `/oralbyte/acessar` etc., mas só existe `nexshape-fitness/acessar` |
-| Bypass frágil | `pathname.includes(".")` pula auth em paths admin com ponto |
+| Tipo | Achado | Severidade |
+|------|--------|------------|
+| Admin protegido | ✅ Middleware + cookie HMAC + CSRF | — |
+| Duplicadas | `/produtos/{slug}` vs landing (301 intencional) | Info |
+| Debug expostas | Nenhuma | — |
+| Rotas `/acessar` | ✅ 7/7 implementadas | Resolvido |
+| APIs duplicadas | `/admin/api/contact` vs `/admin/api/settings` (WhatsApp em ambos) | Média |
+| Bypass antigo | ✅ Removido (`ADMIN_PUBLIC_PATHS` explícito) | Resolvido |
 
 ---
 
@@ -227,7 +231,7 @@ Auth de usuários finais, RBAC, multi-tenant, vendas, estoque, financeiro, gatew
 | Soft delete | DELETE físico em leads |
 | Auditoria de alterações | Ausente |
 | Multi-tenant | Não |
-| **`db.json` no `.gitignore`** | **Não** — risco PII no Git |
+| **`db.json` no `.gitignore`** | ✅ Sim — preflight confirma não rastreado |
 | Spec Fabrica Postgres | Planejado, não migrado |
 
 ---
@@ -238,15 +242,15 @@ Auth de usuários finais, RBAC, multi-tenant, vendas, estoque, financeiro, gatew
 |----------|--------|-----------|
 | Auth admin | Implementada | `lib/admin/auth.ts`, cookie httpOnly |
 | RBAC | Ausente | Senha única `ADMIN_PASSWORD` |
-| CSRF admin | Parcial | SameSite=Lax; sem token CSRF |
-| XSS | Parcial | React + CSP com `unsafe-inline`/`unsafe-eval` |
+| CSRF admin | ✅ Implementado | Double-submit cookie + header `x-admin-csrf` |
+| XSS | Parcial | React + CSP; prod sem `unsafe-eval`; `unsafe-inline` em styles |
 | SQL Injection | N/A | Sem SQL |
 | Rate limiting | Implementado | Contato 10/min; login 5/min; fallback memória |
 | Headers | Implementados | HSTS, CSP, X-Frame em `next.config.ts` |
 | Turnstile | Opcional | Gap: UI usa só site key; API exige par completo |
 | Honeypot | OK | Campo `website` |
-| SSRF webhook | Mitigado | URL via env, `redirect: manual` |
-| `SESSION_SECRET` | Parcial | Fallback = senha + `_salt_secret` |
+| SSRF webhook | ✅ Mitigado | HTTPS + `CRM_WEBHOOK_ALLOWED_HOSTS` obrigatório em prod |
+| `SESSION_SECRET` | ✅ Obrigatório prod | Login 503 se ausente |
 | LGPD | Parcial | Consent + páginas legais |
 | npm audit | Moderado | postcss (transitivo); tmp em dev (`@lhci/cli`) |
 
@@ -285,8 +289,9 @@ Não há roles, permissions granulares, 2FA nem audit log de ações admin.
 | `/admin/api/leads` | GET, PUT, DELETE |
 | `/admin/api/products` | GET, PUT |
 | `/admin/api/contact` | GET, PUT |
+| `/admin/api/settings` | GET, PUT |
 
-OpenAPI Fabrica: parcial vs implementação atual (persistência + admin).
+OpenAPI Fabrica: parcial vs implementação atual (persistência + admin + settings).
 
 ---
 
@@ -294,7 +299,7 @@ OpenAPI Fabrica: parcial vs implementação atual (persistência + admin).
 
 | Serviço | Finalidade | Credenciais | Risco |
 |---------|------------|-------------|-------|
-| CRM webhook | Leads JSON | `CRM_WEBHOOK_URL`, `CRM_API_KEY?` | 502 se CRM down; sem allowlist URL |
+| CRM webhook | Leads JSON | `CRM_WEBHOOK_URL`, `CRM_API_KEY?`, `CRM_WEBHOOK_ALLOWED_HOSTS` | 502 se CRM down; allowlist SSRF em prod |
 | Upstash | Storage + rate limit | REST URL + token | Token = leitura/escrita total |
 | Turnstile | CAPTCHA | Site + secret | Config incompleta = bypass API |
 | WhatsApp | CTA `wa.me` | Admin ou env | Placeholder se vazio |
@@ -332,7 +337,7 @@ Recomendações: paginar leads no admin; cache `getProductsDynamic()`; bundle an
 | Organização | Boa — `app/`, `components/`, `lib/` por domínio |
 | Padrões Next 15 | Consistente |
 | Complexidade | Baixa–média |
-| Débito | Rotas `/acessar` incompletas; Turnstile client/server; `db.json` fora do gitignore |
+| Débito | APIs contact/settings duplicadas; paginação leads pendente |
 
 ---
 
@@ -340,13 +345,13 @@ Recomendações: paginar leads no admin; cache `getProductsDynamic()`; bundle an
 
 | Tipo | Status |
 |------|--------|
-| Unitários | **11 arquivos, 39 casos** — passando |
-| Integração API | Parcial (`app/api/contact/route.test.ts`) |
-| E2E | Ausente |
-| Admin / middleware / Redis | Não cobertos |
-| Cobertura % | Sem threshold no CI |
+| Unitários | **16 arquivos, 62 casos** — passando |
+| Integração API | Parcial (`app/api/contact/route.test.ts`, 5 casos) |
+| E2E | ✅ Playwright (`e2e/public.spec.ts`, `e2e/admin.spec.ts`) |
+| Admin / middleware | ✅ Parcial (`auth.test`, `csrf.test`, `middleware-paths.test`, admin E2E) |
+| Cobertura % | Sem threshold no CI; E2E advisory no CI |
 
-Arquivos: `schema`, `query-param`, `rate-limit`, `turnstile`, `redact`, `whatsapp`, `resolve-app-url`, `product-access-redirect`, `site-settings`, `product-interest-options`, `route.test.ts`.
+Arquivos: `auth`, `csrf`, `crm-webhook`, `schema`, `query-param`, `rate-limit`, `turnstile`, `redact`, `whatsapp`, `timing-safe`, `resolve-app-url`, `product-access-redirect`, `site-settings`, `product-interest-options`, `middleware-paths`, `route.test.ts`.
 
 ---
 
@@ -446,6 +451,7 @@ Detalhes: [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md), [GIT_SETUP.md](./GIT_SETUP.md)
 | `NEXT_PUBLIC_FORCE_APP_ACCESS_MODE` | Opcional | `production` \| `development` |
 | `APP_REDIRECT_ALLOWED_HOSTS` | Opcional | Hosts extras redirect |
 | `NEXT_PUBLIC_CONTACT_WHATSAPP_*` | Opcional | Fallback; admin sobrescreve |
+| `NEXT_PUBLIC_PORTAL_CENTRAL_URL` | Opcional | Fallback sidebar admin; sobrescrito por settings |
 
 ---
 
@@ -496,7 +502,7 @@ Evitar logar PII completo; usar `lib/security/redact.ts`.
 | `docto/DEPLOY_VERCEL.md` | Presente |
 | `docto/TESTE_LOCAL.md` | Presente |
 | `docto/GIT_SETUP.md` | Presente |
-| Este relatório | **v2.0** |
+| Este relatório | **v3.0** |
 | OpenAPI Fabrica | Parcial vs admin/persistência |
 
 ---
@@ -510,11 +516,11 @@ Evitar logar PII completo; usar `lib/security/redact.ts`.
 | R3 | Turnstile só site key | Bots bypass CAPTCHA | Média | UI = `isTurnstileEnabled()` |
 | R4 | `db.json` commitável | Vazamento PII | Média | `.gitignore` + remover do histórico se commitado |
 | R5 | Admin senha vazada | Exfiltração leads/redirect | Média | Senha forte + `SESSION_SECRET` |
-| R6 | Rotas `/acessar` faltando | 404 em 6 produtos | **Alta** | Route dinâmica ou 6 handlers |
-| R7 | CRM URL sem allowlist | SSRF se env comprometido | Baixa | Allowlist hosts |
-| R8 | Copy ConsultaTech/PIX | Legal/reputação | Média | Revisão jurídica |
-| R9 | CSP `unsafe-eval` | XSS ampliado | Média | Endurecer CSP |
-| R10 | Sem testes admin/E2E | Regressão auth | Média | Vitest + Playwright |
+| R6 | APIs settings/contact duplicadas | Inconsistência WhatsApp | Baixa | Consolidar em uma API |
+| R7 | Copy ConsultaTech/PIX | Legal/reputação | Média | Revisão jurídica |
+| R8 | CSP `unsafe-inline` styles | XSS ampliado (Tailwind) | Baixa | Nonce/hash futuro |
+| R9 | Sem testes admin/E2E gate CI | Regressão auth | Baixa | E2E como gate (não advisory) |
+| R10 | PII texto claro Redis | Vazamento se token exposto | Média | CRM primário + rotação token |
 
 ---
 
@@ -526,7 +532,7 @@ Evitar logar PII completo; usar `lib/security/redact.ts`.
 |----|----------|--------|
 | C1 | Upstash obrigatório em prod | ⬜ |
 | C2 | CRM webhook testado E2E | ⬜ |
-| C3 | `/acessar` para 7 produtos | ⬜ |
+| C3 | `/acessar` para 7 produtos | ✅ |
 | C4 | `db.json` → `.gitignore` | ✅ |
 | C5 | Turnstile alinhado (UI = servidor) | ✅ |
 
@@ -537,8 +543,9 @@ Evitar logar PII completo; usar `lib/security/redact.ts`.
 | A1 | `SESSION_SECRET` obrigatório em prod | ✅ |
 | A2 | Compare timing-safe (senha/HMAC) | ✅ |
 | A3 | Rate limit APIs admin | ✅ |
-| A4 | CSRF ou `SameSite=Strict` admin | ⬜ |
-| A5 | Testes middleware + login + leads API | ⬜ |
+| A4 | CSRF admin | ✅ |
+| A5 | Testes middleware + login + leads API | ✅ (parcial — E2E admin) |
+| A6 | Documentar `NEXT_PUBLIC_PORTAL_CENTRAL_URL` | ✅ |
 
 ### Média
 
@@ -546,9 +553,9 @@ Evitar logar PII completo; usar `lib/security/redact.ts`.
 |----|----------|--------|
 | M1 | Audit log admin | ⬜ |
 | M2 | Paginação leads | ⬜ |
-| M3 | Allowlist CRM webhook | ⬜ |
-| M4 | CSP sem `unsafe-eval` | ⬜ |
-| M5 | Playwright E2E smoke | ⬜ |
+| M3 | Allowlist CRM webhook | ✅ |
+| M4 | CSP sem `unsafe-eval` | ✅ (prod) |
+| M5 | Playwright E2E smoke | ✅ (advisory CI) |
 | M6 | Postgres modo B (Fabrica) | ⬜ |
 
 ### Baixa
@@ -561,7 +568,7 @@ Evitar logar PII completo; usar `lib/security/redact.ts`.
 
 ### Já concluídas (v1.x)
 
-Rate limit, Next 15.5.18, security headers, sitemap 7 landings, Turnstile base, Vitest 39 casos, CI, redirects 301, painel admin, persistência JSON/Redis, middleware.
+Rate limit, Next 15.5.18, security headers, sitemap 7 landings, Turnstile, Vitest 62 casos, Playwright E2E, CI, redirects 301, painel admin, persistência JSON/Redis, middleware, CSRF, CRM allowlist.
 
 ---
 
@@ -569,20 +576,20 @@ Rate limit, Next 15.5.18, security headers, sitemap 7 landings, Turnstile base, 
 
 | Dimensão | Nota (0–10) | Data |
 |----------|-------------|------|
-| Arquitetura | 7,5 | 21/05/2026 |
-| Segurança | 7,5 | 21/05/2026 |
-| Performance | 7,5 | 21/05/2026 |
-| Código | 8,0 | 21/05/2026 |
-| UX/UI | 8,5 | 21/05/2026 |
-| Testes | 7,0 | 21/05/2026 |
-| Deploy | 8,0 | 21/05/2026 |
-| Escalabilidade | 6,5 | 21/05/2026 |
+| Arquitetura | 8,0 | 22/05/2026 |
+| Segurança | 8,0 | 22/05/2026 |
+| Performance | 7,5 | 22/05/2026 |
+| Código | 8,0 | 22/05/2026 |
+| UX/UI | 8,5 | 22/05/2026 |
+| Testes | 7,5 | 22/05/2026 |
+| Deploy | 8,0 | 22/05/2026 |
+| Escalabilidade | 6,5 | 22/05/2026 |
 
-**Nota geral ponderada: 7,6 / 10** (após v2.1)
+**Nota geral ponderada: 7,9 / 10** (v3.0)
 
-- **Código ~85%** pronto para deploy técnico.
+- **Código ~90%** pronto para deploy técnico.
 - **Go-live operacional** depende de Upstash, CRM, secrets e DNS.
-- Recalcular para **8,0+** após P0 do [plano §27](#27-plano-de-ação-prioritizado).
+- Recalcular para **8,2+** após P0 concluídos em produção.
 
 ---
 
@@ -590,18 +597,19 @@ Rate limit, Next 15.5.18, security headers, sitemap 7 landings, Turnstile base, 
 
 | Item | Status | Data |
 |------|--------|------|
-| Build + 39 testes CI | ✅ | 21/05/2026 |
-| Middleware + admin | ✅ | 21/05/2026 |
-| Rate limit contact/login | ✅ | 21/05/2026 |
-| Next 15.5.18 + headers | ✅ | 21/05/2026 |
-| Sitemap 7 landings | ✅ | 21/05/2026 |
-| Painel admin leads/produtos/WhatsApp | ✅ | 21/05/2026 |
+| Build + 62 testes + preflight | ✅ | 22/05/2026 |
+| Middleware + admin + CSRF | ✅ | 22/05/2026 |
+| Rate limit contact/login/admin | ✅ | 22/05/2026 |
+| Next 15.5.18 + headers (CSP prod) | ✅ | 22/05/2026 |
+| Sitemap 7 landings | ✅ | 22/05/2026 |
+| Painel admin leads/produtos/WhatsApp/Portal | ✅ | 22/05/2026 |
+| Playwright E2E (advisory CI) | ✅ | 22/05/2026 |
 | Upstash Redis em prod | ⬜ **Bloqueador** | |
 | CRM webhook testado | ⬜ **Bloqueador** | |
-| `ADMIN_PASSWORD` + `SESSION_SECRET` prod | ⬜ | |
+| `ADMIN_PASSWORD` + `SESSION_SECRET` prod | ⬜ **Bloqueador** | |
 | Turnstile (ambas chaves) antes ads pagos | ⬜ | |
-| Rotas `/acessar` 7 produtos | ✅ | 21/05/2026 |
-| `db.json` fora do Git | ✅ | 21/05/2026 |
+| Rotas `/acessar` 7 produtos | ✅ | 22/05/2026 |
+| `db.json` fora do Git | ✅ | 22/05/2026 |
 | Git push remoto + Vercel | ⬜ | |
 | Domínio + SSL | ⬜ | |
 | Monitoramento uptime | ⬜ | |
@@ -666,12 +674,12 @@ Rate limit, Next 15.5.18, security headers, sitemap 7 landings, Turnstile base, 
 
 | ID | Item | Descrição | Impacto | Esforço | Status |
 |----|------|-----------|---------|---------|--------|
-| P3-01 | Testes admin | Vitest: `verifySessionToken`, login 401, leads PUT | Médio | 1 dia | ⬜ |
-| P3-02 | Playwright E2E | Smoke: contato → enviado; admin login → lista leads | Médio | 2 dias | ⬜ |
-| P3-03 | CSRF admin | Token ou `SameSite=Strict` | Médio | 4h | ⬜ |
+| P3-01 | Testes admin | Vitest + E2E login/CSRF | Médio | 1 dia | ✅ | 22/05/2026 |
+| P3-02 | Playwright E2E | Smoke contato + admin | Médio | 2 dias | ✅ | 22/05/2026 |
+| P3-03 | CSRF admin | Double-submit cookie | Médio | 4h | ✅ | 22/05/2026 |
 | P3-04 | Audit log admin | Quem alterou/deletou lead | Médio | 1 dia | ⬜ |
-| P3-05 | Allowlist CRM URL | Validar host do `CRM_WEBHOOK_URL` | Médio | 2h | ⬜ |
-| P3-06 | CSP endurecida | Remover `unsafe-eval` | Baixo | 4h | ⬜ |
+| P3-05 | Allowlist CRM URL | Validar host do webhook | Médio | 2h | ✅ | 22/05/2026 |
+| P3-06 | CSP endurecida | Remover `unsafe-eval` prod | Baixo | 4h | ✅ | 22/05/2026 |
 | P3-07 | Revisão jurídica | `/privacidade`, `/termos`, copy ConsultaTech | Alto (negócio) | Externo | ⬜ |
 | P3-08 | Política retenção leads | DPO + CRM | Médio | Externo | ⬜ |
 
@@ -733,6 +741,10 @@ flowchart LR
 | P2-02 | 21/05/2026 | Agent | `guard-admin-api.ts` |
 | P2-03 | 21/05/2026 | Agent | `timing-safe.ts` |
 | P2-04 | 21/05/2026 | Agent | `middleware.ts` |
+| P3-03 | 22/05/2026 | Agent | `lib/admin/csrf.ts` |
+| P3-05 | 22/05/2026 | Agent | `crm-webhook.ts` |
+| P3-06 | 22/05/2026 | Agent | `next.config.ts` |
+| Preflight | 22/05/2026 | Agent | `preflight-go-live.ps1` OK |
 
 ---
 
@@ -797,16 +809,16 @@ Revisão jurídica; WhatsApp real; política de retenção no CRM (LGPD).
 | 2 | CRM não recebe leads | P0-02 |
 | 3 | Site não na Vercel | P0-04 |
 | 4 | Domínio inativo | P0-05 |
-| 5 | “Acessar sistema” 404 (6 produtos) | P2-01 |
+| 5 | “Acessar sistema” 404 | ✅ Resolvido (7 rotas) |
 | 6 | Campanha paga sem jurídico | P3-07 |
 
 ---
 
 ## Conclusão
 
-O **nexshape-site** (v2.0) é um portal de marketing com **painel admin**, persistência **JSON/Redis**, captura de leads, integração CRM e configuração de produtos/WhatsApp. Os apps SaaS da suite **não estão neste repositório**.
+O **nexshape-site** (v3.0) é um portal de marketing com **painel admin**, persistência **JSON/Redis**, captura de leads, integração CRM, CSRF, rate limits e configuração de produtos/WhatsApp/Portal Central. Os apps SaaS da suite **não estão neste repositório**.
 
-**Readiness:** nota **7,4/10** — executar [Fase 0 do plano §27](#fase-0--bloqueadores-go-live-p0) antes do go-live público.
+**Readiness:** nota **7,9/10** — código e preflight OK; executar [Fase 0 do plano §27](#fase-0--bloqueadores-go-live-p0) (Upstash, CRM, secrets, Vercel, domínio) antes do go-live público.
 
 ---
 

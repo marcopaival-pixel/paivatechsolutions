@@ -1,6 +1,8 @@
 # Commit recomendado antes do go-live
 
-Há alterações locais **não commitadas** (admin, segurança, E2E, docs). Execute após o preflight passar.
+Há alterações locais **não commitadas** (admin settings/Portal Central, auditoria v3.0, docs). Execute após o preflight passar.
+
+> **Preflight 22/05/2026:** typecheck, 62 testes Vitest e build OK; `db.json` não rastreado pelo Git.
 
 ## 1. Preflight
 
@@ -40,10 +42,10 @@ cd c:\Projetos\PaivatechSolutions
 & $git status
 
 & $git commit -m "$(@'
-feat(nexshape-site): admin panel, Redis leads, security hardening and go-live docs
+feat(nexshape-site): Portal Central settings API, audit v3.0 and go-live prep
 
-Add internal admin (leads, products, WhatsApp), JSON/Upstash persistence,
-CSRF and rate limits, seven /acessar routes, Playwright E2E, and Fase 0 runbooks.
+Add /admin/api/settings, Portal Central in dashboard, document env var,
+fix ESLint in admin layout, and update audit report to v3.0 with preflight OK.
 '@)"
 
 # Primeira vez no GitHub:

@@ -10,6 +10,10 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [portalCentralHost, setPortalCentralHost] = useState("");
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsMsg, setSettingsMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const [editingProduct, setEditingProduct] = useState<ProductCustomization | null>(null);
   const [title, setTitle] = useState("");
   const [short, setShort] = useState("");
@@ -38,11 +42,40 @@ export default function AdminProductsPage() {
       if (!res.ok) throw new Error("Erro ao carregar produtos.");
       const data = await res.json();
       setProducts(data.products || []);
+
+      const resSettings = await adminFetch("/admin/api/settings");
+      if (resSettings.ok) {
+        const dataSettings = await resSettings.json();
+        setPortalCentralHost(dataSettings.settings?.portalCentralHost || "");
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro de conexão.";
       setError(msg);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSaveSettings(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingSettings(true);
+    setSettingsMsg(null);
+    try {
+      const res = await adminFetch("/admin/api/settings", {
+        method: "PUT",
+        body: JSON.stringify({ portalCentralHost }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setSettingsMsg({ type: "success", text: "Configuração do Portal Central salva!" });
+        setTimeout(() => setSettingsMsg(null), 2000);
+      } else {
+        setSettingsMsg({ type: "error", text: data.message || "Erro ao salvar configuração." });
+      }
+    } catch {
+      setSettingsMsg({ type: "error", text: "Erro de conexão." });
+    } finally {
+      setSavingSettings(false);
     }
   }
 
@@ -124,6 +157,43 @@ export default function AdminProductsPage() {
         <p className="text-slate-400 text-sm mt-1">
           Textos de marketing e URLs de acesso ao sistema (produção / desenvolvimento).
         </p>
+      </div>
+
+      {/* Configuração do Portal Central */}
+      <div className="glass-card p-6 rounded-3xl border border-white/10 bg-slate-900/20">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-xl">🔗</span>
+          <div>
+            <h3 className="text-lg font-black text-white uppercase tracking-tight">Portal Central (Hub SSO)</h3>
+            <p className="text-xs text-slate-400">Host principal do sistema unificado de acessos.</p>
+          </div>
+        </div>
+        <form onSubmit={handleSaveSettings} className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+          <div className="w-full sm:flex-1 space-y-2">
+            <label className="text-xs font-bold tracking-wider text-slate-400 uppercase">
+              URL do Portal Central
+            </label>
+            <input
+              type="text"
+              value={portalCentralHost}
+              onChange={(e) => setPortalCentralHost(e.target.value)}
+              placeholder="Ex.: http://localhost:3000 ou https://portal.paivatech.com.br"
+              className="w-full rounded-xl border border-white/5 bg-white/5 px-4 py-3.5 text-sm text-white font-mono focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={savingSettings}
+            className="w-full sm:w-auto whitespace-nowrap rounded-xl bg-indigo-600/80 px-6 py-3.5 text-xs font-black uppercase tracking-widest text-white hover:bg-indigo-500 disabled:opacity-50 transition-all"
+          >
+            {savingSettings ? "Salvando..." : "Salvar Host"}
+          </button>
+        </form>
+        {settingsMsg && (
+          <div className={`mt-4 rounded-xl px-4 py-3 text-xs font-semibold ${settingsMsg.type === "success" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+            {settingsMsg.type === "success" ? "✅" : "❌"} {settingsMsg.text}
+          </div>
+        )}
       </div>
 
       {error && (

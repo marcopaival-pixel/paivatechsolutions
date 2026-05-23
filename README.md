@@ -19,7 +19,7 @@ Abra **http://localhost:3000**. Guia completo de hosts e testes locais: [docto/T
 
 ## Auditoria e readiness
 
-- Relatório vivo (v2.2): [docto/Auditoria_Relatorio.md](docto/Auditoria_Relatorio.md)
+- Relatório vivo (v3.0): [docto/Auditoria_Relatorio.md](docto/Auditoria_Relatorio.md)
 - **Go-live Fase 0 (passo a passo):** [docto/GO_LIVE_FASE0.md](docto/GO_LIVE_FASE0.md)
 - Preflight local: `.\docto\scripts\preflight-go-live.ps1` · Commit: [docto/COMMIT_ANTES_GO_LIVE.md](docto/COMMIT_ANTES_GO_LIVE.md)
 - Plano de ação: [docto/Auditoria_Relatorio.md § 27](docto/Auditoria_Relatorio.md#27-plano-de-ação-prioritizado)

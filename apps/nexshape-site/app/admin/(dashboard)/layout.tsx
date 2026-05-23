@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { adminFetch } from "@/lib/admin/admin-fetch";
 
 export default function DashboardLayout({
@@ -11,6 +12,28 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [portalUrl, setPortalUrl] = useState(process.env.NEXT_PUBLIC_PORTAL_CENTRAL_URL || "http://localhost:3000");
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const res = await adminFetch("/admin/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.settings?.portalCentralHost) {
+            let host = data.settings.portalCentralHost;
+            if (!/^https?:\/\//i.test(host)) {
+              host = "http://" + host;
+            }
+            setPortalUrl(host);
+          }
+        }
+      } catch {
+        // ignore errors
+      }
+    }
+    fetchSettings();
+  }, []);
 
   async function handleLogout() {
     try {
@@ -62,6 +85,15 @@ export default function DashboardLayout({
             <Link href="/admin/contato" className={linkClass("/admin/contato")}>
               <span>💬</span> Contato
             </Link>
+            <div className="my-2 border-t border-white/5"></div>
+            <a
+              href={portalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-sm font-semibold tracking-wide text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 transition-all"
+            >
+              <span>🔗</span> Portal Central
+            </a>
             <Link
               href="/"
               className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.02] hover:bg-white/5 text-sm font-semibold tracking-wide text-slate-400 hover:text-white border border-white/5 transition-all"

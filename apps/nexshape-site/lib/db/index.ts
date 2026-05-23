@@ -60,6 +60,8 @@ export interface SiteSettings {
   whatsappPhone?: string;
   /** Texto exibido no site (ex.: +55 (11) 99999-9999) */
   whatsappDisplay?: string;
+  /** Host/URL do sistema Portal Central */
+  portalCentralHost?: string;
 }
 
 // Default product definitions (mirrored from lib/config/products.ts)
@@ -137,6 +139,10 @@ function normalizeSiteSettings(raw: unknown): SiteSettings {
     whatsappDisplay:
       typeof s.whatsappDisplay === "string" && s.whatsappDisplay.trim()
         ? s.whatsappDisplay.trim()
+        : undefined,
+    portalCentralHost:
+      typeof s.portalCentralHost === "string" && s.portalCentralHost.trim()
+        ? s.portalCentralHost.trim()
         : undefined,
   };
 }
