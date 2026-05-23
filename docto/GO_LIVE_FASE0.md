@@ -13,7 +13,8 @@ Guia executável para colocar o **nexshape-site** em produção. O código e os 
 | 7 | Smoke test | 15 min | [§ 7](#7-smoke-test-obrigatório) |
 | 8 | Monitoramento | 10 min | [§ 8](#8-monitoramento) |
 
-Relatório técnico completo: [Auditoria_Relatorio.md](./Auditoria_Relatorio.md) (v3.0).
+Relatório técnico completo: [Auditoria_Relatorio.md](./Auditoria_Relatorio.md) (v3.0).  
+Domínio produção: [PRODUCAO.md](./PRODUCAO.md) — `https://www.paivatech.com.br`
 
 ---
 
@@ -220,7 +221,7 @@ Resumo: [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md)
 
 | Variável | Obrigatória | Valor / origem |
 |----------|-------------|----------------|
-| `NEXT_PUBLIC_SITE_URL` | Sim | `https://www.seudominio.com.br` (URL final com `https://`, sem barra no final) |
+| `NEXT_PUBLIC_SITE_URL` | Sim | `https://www.paivatech.com.br` |
 | `LEAD_DISPATCH_MODE` | Sim | `webhook` |
 | `CRM_WEBHOOK_URL` | Sim (se webhook) | § 3 |
 | `CRM_WEBHOOK_ALLOWED_HOSTS` | Sim (prod + webhook) | Hostname da URL do CRM |

@@ -27,7 +27,7 @@ Gere secrets: `.\docto\scripts\generate-secrets.ps1`
 
 | Variável | Obrigatória | Exemplo / notas |
 |----------|-------------|-----------------|
-| `NEXT_PUBLIC_SITE_URL` | Sim | `https://www.seudominio.com.br` (ou URL `.vercel.app` no primeiro deploy) |
+| `NEXT_PUBLIC_SITE_URL` | Sim | `https://www.paivatech.com.br` |
 | `LEAD_DISPATCH_MODE` | Sim | `webhook` |
 | `CRM_WEBHOOK_URL` | Se webhook | URL HTTPS do CRM |
 | `CRM_WEBHOOK_ALLOWED_HOSTS` | **Sim em prod** | Hostname (ex.: `hooks.zapier.com`) |
@@ -65,7 +65,7 @@ Preview/Development: use `LEAD_DISPATCH_MODE=noop_preview` ou CRM sandbox.
 ## 4. Domínio customizado
 
 1. Vercel → Project → **Settings → Domains**.
-2. Adicionar domínio (ex.: `www.seudominio.com.br`).
+2. Adicionar domínio `www.paivatech.com.br` (e opcionalmente `paivatech.com.br` com redirect para `www`).
 3. Configurar DNS (CNAME para `cname.vercel-dns.com` ou registros indicados).
 4. Aguardar SSL automático.
 5. Atualizar `NEXT_PUBLIC_SITE_URL` → Redeploy.
@@ -73,7 +73,7 @@ Preview/Development: use `LEAD_DISPATCH_MODE=noop_preview` ou CRM sandbox.
 ## 5. Smoke test pós-deploy
 
 ```powershell
-.\docto\scripts\smoke-prod.ps1 -BaseUrl "https://SEU_DOMINIO"
+.\docto\scripts\smoke-prod.ps1 -BaseUrl "https://www.paivatech.com.br"
 ```
 
 Esperado em `/api/health`:
