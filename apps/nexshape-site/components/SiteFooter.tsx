@@ -39,9 +39,9 @@ export function SiteFooter({ products }: SiteFooterProps) {
           </div>
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Ecossistema</h4>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 sm:gap-3">
               {catalog.map((p) => (
-                <Link key={p.slug} href={PRODUCT_LANDING_PATHS[p.slug] || `/produtos/${p.slug}`} className="text-xs text-slate-500 hover:text-indigo-400 transition-colors">
+                <Link key={p.slug} href={PRODUCT_LANDING_PATHS[p.slug] || `/produtos/${p.slug}`} className="text-xs text-slate-500 hover:text-indigo-400 transition-colors py-1.5 sm:py-0">
                   {p.title}
                 </Link>
               ))}
@@ -49,17 +49,17 @@ export function SiteFooter({ products }: SiteFooterProps) {
           </div>
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Institucional</h4>
-            <div className="flex flex-col gap-3">
-              <Link href="/sobre" className="text-xs text-slate-500 hover:text-indigo-400 transition-colors">Sobre a PaivaTech</Link>
-              <Link href="/privacidade" className="text-xs text-slate-500 hover:text-indigo-400 transition-colors">Privacidade</Link>
-              <Link href="/termos" className="text-xs text-slate-500 hover:text-indigo-400 transition-colors">Termos de Uso</Link>
+            <div className="flex flex-col gap-2 sm:gap-3">
+              <Link href="/sobre" className="text-xs text-slate-500 hover:text-indigo-400 transition-colors py-1.5 sm:py-0">Sobre a PaivaTech</Link>
+              <Link href="/privacidade" className="text-xs text-slate-500 hover:text-indigo-400 transition-colors py-1.5 sm:py-0">Privacidade</Link>
+              <Link href="/termos" className="text-xs text-slate-500 hover:text-indigo-400 transition-colors py-1.5 sm:py-0">Termos de Uso</Link>
             </div>
           </div>
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Suporte</h4>
-            <div className="flex flex-col gap-3">
-              <Link href="/contato" className="text-xs text-slate-500 hover:text-indigo-400 transition-colors">Falar com Especialista</Link>
-              <span className="text-xs text-slate-500">contato@paivatech.com.br</span>
+            <div className="flex flex-col gap-2 sm:gap-3">
+              <Link href="/contato" className="text-xs text-slate-500 hover:text-indigo-400 transition-colors py-1.5 sm:py-0">Falar com Especialista</Link>
+              <span className="text-xs text-slate-500 py-1.5 sm:py-0">contato@paivatech.com.br</span>
             </div>
           </div>
         </div>

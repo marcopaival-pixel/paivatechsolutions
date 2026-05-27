@@ -18,11 +18,7 @@ export function ProductHeroCtas({
 }: ProductHeroCtasProps) {
   return (
     <div className="flex flex-wrap gap-6">
-      {!hideDemoButton && (
-        <Link href={contactHref} className={primaryButtonClass}>
-          Solicitar demonstração
-        </Link>
-      )}
+
       {systemAccessUrl ? (
         <Link
           href={systemAccessUrl}

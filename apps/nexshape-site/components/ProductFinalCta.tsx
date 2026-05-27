@@ -85,12 +85,7 @@ export async function ProductFinalCta({
         </h2>
         <p className="mx-auto max-w-2xl text-base text-slate-400">{description}</p>
         <div className="flex flex-wrap items-center justify-center gap-4 pt-6">
-          <Link
-            href={contactHref}
-            className={`rounded-2xl px-10 py-5 text-sm font-black uppercase tracking-widest text-white transition-all active:scale-95 shadow-2xl ${styles.button}`}
-          >
-            Falar com a PaivaTech
-          </Link>
+
           {systemAccessUrl ? (
             <Link
               href={systemAccessUrl}

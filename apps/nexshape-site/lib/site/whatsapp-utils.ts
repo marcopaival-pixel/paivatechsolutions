@@ -19,8 +19,12 @@ export function formatWhatsAppDisplay(digits: string): string {
   return `+${d}`;
 }
 
-export function buildWhatsAppUrl(digits: string): string {
-  return `https://wa.me/${digitsOnly(digits)}`;
+export function buildWhatsAppUrl(digits: string, text?: string): string {
+  let url = `https://wa.me/${digitsOnly(digits)}`;
+  if (text) {
+    url += `?text=${encodeURIComponent(text)}`;
+  }
+  return url;
 }
 
 export function sanitizeWhatsAppPhoneInput(value: unknown): string | undefined {

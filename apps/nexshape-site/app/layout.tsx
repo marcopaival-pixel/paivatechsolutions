@@ -6,6 +6,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { getProductsDynamic } from "@/lib/db";
 import { siteUrl } from "@/lib/site";
 import { SITE_DESCRIPTION } from "@/lib/site/branding";
+import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
+import { isProductLandingPath } from "@/lib/config/product-routes";
 
 import { headers } from "next/headers";
 
@@ -23,6 +25,13 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
 };
 
+export const viewport: import("next").Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#020617",
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -31,6 +40,7 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
   const isAdmin = pathname.startsWith("/admin");
+  const isProductLanding = isProductLandingPath(pathname);
   const products = isAdmin ? [] : await getProductsDynamic();
 
   return (
@@ -41,8 +51,17 @@ export default async function RootLayout({
         ) : (
           <>
             <SiteHeader products={products} />
-            <main className="mx-auto max-w-7xl px-4 py-16 sm:py-24">{children}</main>
+            <main
+              className={
+                isProductLanding
+                  ? "mx-auto max-w-7xl px-4 pt-6 pb-20 sm:pt-8 sm:pb-24"
+                  : "mx-auto max-w-7xl px-4 py-16 sm:py-24"
+              }
+            >
+              {children}
+            </main>
             <SiteFooter products={products} />
+            <FloatingWhatsAppButton />
           </>
         )}
       </body>

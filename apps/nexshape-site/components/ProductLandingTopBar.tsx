@@ -13,30 +13,22 @@ export function ProductLandingTopBar({
   accentButtonClass,
 }: ProductLandingTopBarProps) {
   return (
-    <div className="fixed top-8 left-8 right-8 z-50 flex justify-between items-center pointer-events-none">
+    <div className="relative z-10 mb-8 flex flex-wrap items-center justify-between gap-4">
       <Link
         href="/"
-        className="group flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all active:scale-95 pointer-events-auto"
+        className="group flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all active:scale-95"
       >
         <span className="transition-transform group-hover:-translate-x-1">←</span>
         Voltar ao Portal
       </Link>
 
-      {systemAccessUrl ? (
+      {systemAccessUrl && (
         <Link
           href={systemAccessUrl}
           {...systemAccessLinkProps(systemAccessUrl)}
-          className={`group flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg transition-all active:scale-95 pointer-events-auto ${accentButtonClass}`}
+          className={`group flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg transition-all active:scale-95 ${accentButtonClass}`}
         >
           Acessar sistema
-          <span className="transition-transform group-hover:translate-x-1">→</span>
-        </Link>
-      ) : (
-        <Link
-          href={contactHref}
-          className={`group flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg transition-all active:scale-95 pointer-events-auto ${accentButtonClass}`}
-        >
-          Falar com a equipe
           <span className="transition-transform group-hover:translate-x-1">→</span>
         </Link>
       )}

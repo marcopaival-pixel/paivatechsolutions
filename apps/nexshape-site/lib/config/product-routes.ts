@@ -21,3 +21,9 @@ export const CONTACT_PRODUCT_QUERY: Record<string, string> = {
 };
 
 export const PRODUCT_LANDING_URLS = Object.values(PRODUCT_LANDING_PATHS);
+
+export function isProductLandingPath(pathname: string): boolean {
+  return PRODUCT_LANDING_URLS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+}

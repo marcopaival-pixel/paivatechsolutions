@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Logo } from "@/components/Logo";
 import { ProductFinalCta } from "@/components/ProductFinalCta";
+import Link from "next/link";
 import { ProductHeroCtas } from "@/components/ProductHeroCtas";
 import { ProductLandingTopBar } from "@/components/ProductLandingTopBar";
 import { getSystemAccessUrlBySlug } from "@/lib/products/landing-access";
+import { systemAccessLinkProps } from "@/lib/products/system-access-link";
 
 export const metadata: Metadata = {
   title: "PaivaTech Commerce · Gestão Comercial de Elite e PDV",
@@ -68,7 +70,7 @@ export default async function PaivaTechCommercePage() {
   ];
 
   return (
-    <div className="relative isolate space-y-32 pb-20 overflow-hidden">
+    <div className="relative isolate space-y-24 pb-8 sm:space-y-32 overflow-hidden">
       {/* Header Actions */}
       <ProductLandingTopBar
         contactHref={contactHref}
@@ -83,8 +85,8 @@ export default async function PaivaTechCommercePage() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative pt-10">
-        <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+      <section className="relative">
+        <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-12">
           <div className="space-y-10">
             <div className="inline-flex items-center rounded-full bg-amber-500/10 px-4 py-1.5 text-xs font-black uppercase tracking-[0.3em] text-amber-400 ring-1 ring-inset ring-amber-400/20">
               Ecossistema Comercial Completo com Multi-tenancy
@@ -95,11 +97,19 @@ export default async function PaivaTechCommercePage() {
             <p className="text-base leading-7 text-slate-400 max-w-xl">
               A plataforma definitiva para restaurantes, bares, cafeterias e comércio em geral. Ofereça controle de salão, comandas eletrônicas, frente de caixa rápido com split de pagamento e monitor KDS, tudo sob uma arquitetura multi-tenant isolada e segura.
             </p>
-            <ProductHeroCtas
-              contactHref={contactHref}
-              systemAccessUrl={systemAccessUrl}
-              primaryButtonClass="rounded-2xl bg-amber-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-2xl shadow-amber-500/40 hover:bg-amber-500 transition-all active:scale-95"
-            />
+            <div className="pt-4 flex flex-wrap items-center gap-6">
+              <Link
+                href={systemAccessUrl || "#"}
+                {...systemAccessLinkProps(systemAccessUrl || "")}
+                className="group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-amber-600 px-10 py-5 text-sm font-black uppercase tracking-widest text-white shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all hover:bg-amber-500 hover:shadow-[0_0_60px_rgba(245,158,11,0.7)] hover:-translate-y-1 active:scale-95 border border-amber-500/30"
+              >
+                <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]">
+                  <div className="relative h-full w-12 bg-white/20" />
+                </div>
+                <span>Acessar o Sistema PaivaTech Commerce</span>
+                <span className="transition-transform group-hover:translate-x-2">→</span>
+              </Link>
+            </div>
           </div>
           <div className="relative px-4 [perspective:1000px]">
             <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-900/40 backdrop-blur-3xl shadow-3xl transform [rotateY(-5deg)] hover:[rotateY(0deg)] transition-transform duration-1000 ease-out flex items-center justify-center p-8">

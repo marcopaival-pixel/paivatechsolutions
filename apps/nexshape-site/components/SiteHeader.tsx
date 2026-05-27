@@ -219,7 +219,7 @@ export function SiteHeader({ products }: SiteHeaderProps) {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex md:hidden items-center justify-center p-2 rounded-xl border border-white/10 bg-white/5 text-slate-400 hover:text-white transition-all active:scale-95"
+            className="flex md:hidden items-center justify-center p-3 min-h-[44px] min-w-[44px] rounded-xl border border-white/10 bg-white/5 text-slate-400 hover:text-white transition-all active:scale-95"
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? (
@@ -256,7 +256,7 @@ export function SiteHeader({ products }: SiteHeaderProps) {
                       key={p.slug}
                       href={href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3.5 rounded-xl p-2.5 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all duration-200"
+                      className="flex items-center gap-3.5 rounded-xl p-3 min-h-[44px] bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all duration-200"
                     >
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/5 text-indigo-400">
                         {icon}

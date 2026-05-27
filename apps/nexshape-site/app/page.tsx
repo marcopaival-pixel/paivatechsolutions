@@ -39,7 +39,7 @@ export default async function HomePage() {
           PaivaTech Infrastructure Suite 2026
         </div>
         
-        <h1 className="premium-gradient-text text-balance text-5xl font-black tracking-tight sm:text-7xl mb-8 leading-[1.1]">
+        <h1 className="premium-gradient-text text-balance text-4xl md:text-5xl lg:text-7xl font-black tracking-tight mb-8 leading-[1.1]">
           O Futuro da Gestão <br/> <span className="text-white">Operacional Inteligente</span>
         </h1>
         
@@ -95,7 +95,7 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+        <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 max-w-7xl mx-auto">
           {products.map((p) => {
             const slug = p.slug as ProductSlug;
             const icons: Record<string, string> = {

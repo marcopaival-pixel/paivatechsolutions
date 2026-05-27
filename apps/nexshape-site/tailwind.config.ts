@@ -10,6 +10,13 @@ export default {
   darkMode: "class",
   theme: {
     extend: {
+      screens: {
+        'sm': '640px',   // Mobile até 640px, a partir daqui tablet
+        'md': '768px',   // Tablet comum
+        'lg': '1024px',  // Desktop
+        'xl': '1280px',  // Desktop grande
+        '2xl': '1600px', // Ultrawide
+      },
       fontFamily: {
         sans: ["var(--font-geist-sans)", ...defaultTheme.fontFamily.sans],
       },

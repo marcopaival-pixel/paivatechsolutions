@@ -44,7 +44,7 @@ function resolveDigits(settings: SiteSettings): string {
 }
 
 /** Configuração efetiva: painel admin → variáveis de ambiente → padrão. */
-export async function getContactWhatsApp(): Promise<ContactWhatsApp> {
+export async function getContactWhatsApp(message?: string): Promise<ContactWhatsApp> {
   const settings = await getSiteSettings();
   const phoneDigits = resolveDigits(settings);
   const display =
@@ -53,7 +53,7 @@ export async function getContactWhatsApp(): Promise<ContactWhatsApp> {
     formatWhatsAppDisplay(phoneDigits);
 
   return {
-    url: buildWhatsAppUrl(phoneDigits),
+    url: buildWhatsAppUrl(phoneDigits, message),
     display,
   };
 }
